@@ -4,7 +4,7 @@ Aplikacja na telefon do dokumentacji fotograficznej bankomatów. Wgrywasz listę
 
 Działa w przeglądarce jako aplikacja instalowana na ekranie głównym (Android i iPhone), także bez internetu. Nie ma serwera, kont ani bazy danych. Zdjęcia i listy zostają na Twoim telefonie.
 
-**Adres aplikacji:** `https://TWOJ-LOGIN.github.io/foto-atm/`
+**Adres aplikacji:** `https://kkolodziej15.github.io/foto-atm/`
 
 ## Instalacja na telefonie
 
