@@ -267,7 +267,7 @@ progress{width:100%;height:10px;accent-color:var(--accent)}
         <label class="switch"><input type="checkbox" id="dmgOn">Uszkodzenie</label>
         <select id="dmgType" aria-label="Rodzaj uszkodzenia"></select>
       </div>
-      <p class="hint" id="dmgHelp">Włącz przed zrobieniem zdjęcia, jeśli bankomat jest uszkodzony. Nazwa pliku dostanie dopisek z rodzajem uszkodzenia.</p>
+      <p class="hint" id="dmgHelp">Włącz przed zrobieniem zdjęcia, jeśli bankomat jest uszkodzony. Nazwa pliku będzie zawierać rodzaj uszkodzenia.</p>
     </div>
     <div class="shoot">
       <label class="btn big" id="camLbl"><svg class="i"><use href="#i-camera"/></svg><span id="camTxt">Zrób zdjęcie</span><input type="file" id="camIn" accept="image/*" capture="environment" hidden></label>
@@ -290,7 +290,7 @@ progress{width:100%;height:10px;accent-color:var(--accent)}
     <label class="chk"><input type="checkbox" id="imHdr" checked>Pierwszy wiersz to nagłówki kolumn</label>
     <label>Kolumna z numerem głównym
       <select id="imKey"></select>
-      <span class="hint">To numer, od którego zaczną się nazwy zdjęć, np. <b>ATM-0001</b>_01.jpg.</span>
+      <span class="hint">To numer, od którego zaczną się nazwy zdjęć, np. <b>ATM-0001</b>-01.jpg.</span>
     </label>
     <fieldset><legend>Kolumny dodatkowe (opcjonalnie)</legend>
       <div id="imInfo" class="cols"></div>
@@ -350,7 +350,7 @@ progress{width:100%;height:10px;accent-color:var(--accent)}
     </label>
     <label>Rodzaje uszkodzeń
       <textarea id="stDmg"></textarea>
-      <span class="hint">Jeden rodzaj w wierszu. Numer rodzaju w nazwie pliku (np. <b>_USZ2</b>-1) to miejsce na tej liście. Nowe rodzaje dopisuj na końcu, bo zmiana kolejności zmieni nazwy zdjęć, które już zrobiłeś.</span>
+      <span class="hint">Jeden rodzaj w wierszu. Nazwa rodzaju trafia do nazwy pliku, np. ATM-0001-03-<b>Klawiatura</b>-1.jpg. Polskie litery i spacje zamieniam na proste znaki. Zmiana nazwy rodzaju zmieni nazwy zdjęć, które już zrobiłeś.</span>
     </label>
     <p class="hint" id="stStorage"></p>
     <div class="actions">
@@ -368,8 +368,8 @@ progress{width:100%;height:10px;accent-color:var(--accent)}
     <button class="btn" type="button" id="helpTutor">Pokaż samouczek</button>
     <div>
       <details class="faq"><summary>Jak nazywane są zdjęcia?<svg class="i"><use href="#i-chev"/></svg></summary>
-        <div class="body"><p>Numer bankomatu z Excela i kolejny numer zdjęcia: <code>ATM-0001_01.jpg</code>, <code>_02</code>, <code>_03</code>.</p>
-        <p>Uszkodzenie dostaje dopisek, np. <code>ATM-0001_03_USZ2-1.jpg</code>. To rodzaj uszkodzenia nr 2 i pierwsze takie zdjęcie w tej pozycji.</p>
+        <div class="body"><p>Numer bankomatu z Excela i kolejny numer zdjęcia: <code>ATM-0001-01.jpg</code>, <code>-02</code>, <code>-03</code>.</p>
+        <p>Uszkodzenie dostaje w nazwie swój rodzaj, np. <code>ATM-0001-03-Klawiatura-1.jpg</code>. Ostatnia cyfra to kolejne zdjęcie tego rodzaju uszkodzenia w pozycji.</p>
         <p>Znaki, których nie lubią komputery (ukośniki, dwukropki, spacje), zamieniam na myślnik.</p></div></details>
       <details class="faq"><summary>Jak oznaczyć uszkodzenie?<svg class="i"><use href="#i-chev"/></svg></summary>
         <div class="body"><p>Włącz przełącznik „Uszkodzenie”, wybierz rodzaj i zrób zdjęcie. Przycisk aparatu zmieni kolor, żebyś nie pomylił trybu.</p>
@@ -513,10 +513,14 @@ function names(item, photos) {
   const cnt = {};
   const base = safe(item.id);
   return photos.map((p, i) => {
-    let n = base + '_' + String(i + 1).padStart(w, '0');
-    if (p.dmg) { cnt[p.dmg] = (cnt[p.dmg] || 0) + 1; n += '_USZ' + p.dmg + '-' + cnt[p.dmg]; }
+    let n = base + '-' + String(i + 1).padStart(w, '0');
+    if (p.dmg) { cnt[p.dmg] = (cnt[p.dmg] || 0) + 1; n += '-' + dmgSlug(p.dmg) + '-' + cnt[p.dmg]; }
     return n + ext(p.blob);
   });
+}
+function dmgSlug(k) {
+  const t = String(dmgName(k)).replace(/ł/g, 'l').replace(/Ł/g, 'L').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return t.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Uszkodzenie' + k;
 }
 const dmgName = k => k ? (cfg.dmgTypes[k - 1] || ('rodzaj ' + k)) : '';
 
@@ -648,7 +652,7 @@ function updateNextName() {
   const all = names(cur, [...curPhotos, {dmg, blob: {type: 'image/jpeg'}}]);
   $('#nextName').innerHTML = `Następne zdjęcie dostanie nazwę <span class="mono">${esc(all[all.length - 1])}</span>`;
   $('#dmgHelp').textContent = dmg
-    ? `Rodzaj ${dmg}: ${dmgName(dmg)}. W nazwie pojawi się dopisek _USZ${dmg}-numer, czyli kolejne uszkodzenie tego rodzaju w tej pozycji.`
+    ? `Rodzaj ${dmg}: ${dmgName(dmg)}. Nazwa pliku będzie zawierać słowo „${dmgSlug(dmg)}” i numer kolejnego takiego zdjęcia w tej pozycji.`
     : DMG_HELP;
 }
 $('#dmgOn').addEventListener('change', updateCamBtn);
@@ -672,8 +676,8 @@ async function showItem(id) {
 }
 function dmgOptions(sel) {
   let o = `<option value="0"${sel ? '' : ' selected'}>Zwykłe</option>`;
-  cfg.dmgTypes.forEach((t, i) => { o += `<option value="${i + 1}"${sel === i + 1 ? ' selected' : ''}>USZ ${i + 1}. ${esc(t)}</option>`; });
-  if (sel > cfg.dmgTypes.length) o += `<option value="${sel}" selected>USZ ${sel}</option>`;
+  cfg.dmgTypes.forEach((t, i) => { o += `<option value="${i + 1}"${sel === i + 1 ? ' selected' : ''}>Uszkodzenie: ${esc(t)}</option>`; });
+  if (sel > cfg.dmgTypes.length) o += `<option value="${sel}" selected>Uszkodzenie: ${esc(dmgName(sel))}</option>`;
   return o;
 }
 async function renderGrid() {
@@ -1002,9 +1006,9 @@ const TUTOR_STEPS = [
   {t: 'Wgraj listę', art: '<rect x="10" y="8" width="44" height="48" rx="4"/><path d="M10 22h44M10 36h44M26 22v34"/>',
    x: 'Zacznij od pliku Excel z numerami bankomatów. Wskażesz kolumnę z numerem głównym i, jeśli chcesz, kolumny z adresem. Gdy lista się zmieni, wgraj ją ponownie. Zdjęcia zostaną na miejscu.'},
   {t: 'Zrób zdjęcia', art: '<path d="M8 22a4 4 0 0 1 4-4h8l4-6h16l4 6h8a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><circle cx="32" cy="36" r="10"/>',
-   x: 'Wejdź w pozycję i dotknij „Zrób zdjęcie”. Aplikacja sama nazwie plik numerem bankomatu i kolejnym numerem zdjęcia:<br><span class="mono">ATM-0001_01.jpg</span><br>Zdjęć może być tyle, ile trzeba.'},
+   x: 'Wejdź w pozycję i dotknij „Zrób zdjęcie”. Aplikacja sama nazwie plik numerem bankomatu i kolejnym numerem zdjęcia:<br><span class="mono">ATM-0001-01.jpg</span><br>Zdjęć może być tyle, ile trzeba.'},
   {t: 'Oznacz uszkodzenia', art: '<path d="M32 8 58 54H6z"/><path d="M32 26v14"/><circle class="f" cx="32" cy="47" r="2.5"/>',
-   x: 'Włącz „Uszkodzenie”, wybierz rodzaj i zrób zdjęcie. Nazwa dostanie dopisek z rodzajem i numerem uszkodzenia:<br><span class="mono">ATM-0001_03_USZ2-1.jpg</span>'},
+   x: 'Włącz „Uszkodzenie”, wybierz rodzaj i zrób zdjęcie. Nazwa dostanie rodzaj uszkodzenia, np.:<br><span class="mono">ATM-0001-03-Klawiatura-1.jpg</span>'},
   {t: 'Zapisz kopię', art: '<path d="M8 40v12a4 4 0 0 0 4 4h40a4 4 0 0 0 4-4V40"/><path d="M32 8v32M20 28l12 12 12-12"/>',
    x: 'Zdjęcia są tylko na tym telefonie. Po pracy dotknij „Eksport ZIP” i zapisz paczkę na komputerze, pendrive lub dysku. W środku czekają foldery z numerami i tabela manifest.csv.'},
   {t: 'Pracuj bez zasięgu', art: '<rect x="18" y="6" width="28" height="52" rx="6"/><path d="M28 50h8M26 24a8 8 0 0 1 12 0M22 18a14 14 0 0 1 20 0M12 56 52 8"/>',

@@ -4,7 +4,7 @@ Aplikacja na telefon do dokumentacji fotograficznej bankomatów. Wgrywasz listę
 
 Działa w przeglądarce jako aplikacja instalowana na ekranie głównym (Android i iPhone), także bez internetu. Nie ma serwera, kont ani bazy danych. Zdjęcia i listy zostają na Twoim telefonie.
 
-**Adres aplikacji:** `https://kkolodziej15.github.io/foto-atm/`
+**Adres aplikacji:** `https://TWOJ-LOGIN.github.io/foto-atm/`
 
 ## Instalacja na telefonie
 
@@ -25,8 +25,9 @@ Zdjęcia są tylko na telefonie. Usunięcie aplikacji lub wyczyszczenie danych p
 
 ## Nazwy plików
 
-- zwykłe zdjęcie: `ATM-0001_01.jpg`, `ATM-0001_02.jpg`, …
-- uszkodzenie: `ATM-0001_03_USZ2-1.jpg` (rodzaj uszkodzenia nr 2, pierwsze takie zdjęcie w pozycji)
+- zwykłe zdjęcie: `ATM-0001-01.jpg`, `ATM-0001-02.jpg`, …
+- uszkodzenie: `ATM-0001-03-Klawiatura-1.jpg` (w nazwie jest rodzaj uszkodzenia, a ostatnia cyfra to kolejne zdjęcie tego rodzaju w pozycji)
+- polskie litery i spacje w nazwie rodzaju są zamieniane na proste znaki, np. „Czytnik kart” → `Czytnik-kart`
 - znaki niedozwolone w nazwach plików i spacje zamieniane są na `-`, np. `ATM/0004` → `ATM-0004`
 - po usunięciu zdjęcia numeracja przelicza się sama
 
@@ -42,7 +43,7 @@ Wszystkie pliki są statyczne, więc wystarczy dowolny hosting z HTTPS. Bez HTTP
 
 ### Aktualizacje
 
-Po każdej zmianie plików zmień wersję cache w `sw.js` (`atm-foto-v3` → `atm-foto-v4`). Telefony pokażą wtedy pasek „Dostępna nowa wersja”, a po dotknięciu „Odśwież” wczytają nową.
+Po każdej zmianie plików zmień wersję cache w `sw.js` (`atm-foto-v4` → `atm-foto-v5`). Telefony pokażą wtedy pasek „Dostępna nowa wersja”, a po dotknięciu „Odśwież” wczytają nową.
 
 ## Pliki
 

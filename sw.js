@@ -1,4 +1,4 @@
-const CACHE = 'atm-foto-v3';
+const CACHE = 'atm-foto-v4';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
   'lib/xlsx.full.min.js', 'lib/jszip.min.js'];
 
