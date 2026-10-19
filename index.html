@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Foto ATM</title>
+<meta name="description" content="Zdjęcia bankomatów w terenie: lista z Excela, nazwy plików nadawane same, eksport do ZIP.">
+<meta name="theme-color" content="#232323">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Foto ATM">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<style>
+:root{
+  --page:#ebebeb; --card:#ffffff; --card-2:#ebebeb; --tab:#d8d8d8;
+  --ink:#232323; --ink-body:#333333; --ink-muted:#6d6d6d; --ink-nav:#414141;
+  --accent:#2c68b3; --accent-icon:#006ab9; --on-accent:#ffffff;
+  --action:#232323; --on-action:#ffffff; --action-hover:#505050;
+  --border:#ebebeb; --field:#8a8a8a;
+  --danger:#b3261e; --danger-bg:#fdecea; --on-danger:#ffffff;
+  --head:#232323; --on-head:#ffffff;
+  --overlay:#02010178;
+  --radius-xs:3px; --radius-md:10px; --radius-lg:12px; --radius-card:16px; --radius-pill:35px;
+  --shadow-hover:0 0 10px 0 #777777; --shadow-glass:0 9px 21px 0 #00000040;
+  --font:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --page:#232323; --card:#313131; --card-2:#3b3b3b; --tab:#3b3b3b;
+    --ink:#ffffff; --ink-body:#ffffff; --ink-muted:#bcbcbc; --ink-nav:#ebebeb;
+    --accent:#8ab4e8; --accent-icon:#8ab4e8; --on-accent:#232323;
+    --action:#ebebeb; --on-action:#181818; --action-hover:#ffffff;
+    --border:#3b3b3b; --field:#8a8a8a;
+    --danger:#ff8a80; --danger-bg:#4a2523; --on-danger:#232323;
+    --head:#313131; --on-head:#ffffff;
+    --shadow-hover:0 0 10px 0 #00000099;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink-body);font:400 16px/23px var(--font);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.hidden{display:none!important}
+svg.i{width:1em;height:1em;fill:currentColor;flex:none}
+svg.i.flip{transform:scaleX(-1)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:var(--head);color:var(--on-head)}
+header.top h1{flex:1;margin:0 0 0 6px;font-size:19px;line-height:1.2;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.round{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:var(--radius-pill);background:none;color:inherit;font:600 18px/1 var(--font);cursor:pointer;transition:background .3s}
+.round:hover{background:#ffffff26}
+.round svg{font-size:20px}
+.net{padding:4px 10px;border-radius:var(--radius-pill);background:#ffffff26;font-size:13px;line-height:1;font-weight:500;white-space:nowrap}
+
+main{max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+h2{margin:0;font-size:23px;line-height:32px;font-weight:700;color:var(--ink)}
+.hint{margin:0;font-size:14px;line-height:1.5;color:var(--ink-muted)}
+.hint b{color:var(--ink);font-weight:500}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--card-2);padding:1px 6px;border-radius:var(--radius-xs);color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:15px 31px;border:2px solid var(--action);border-radius:var(--radius-pill);background:var(--action);color:var(--on-action);font:500 15px/1 var(--font);text-align:center;text-decoration:none;cursor:pointer;transition:all .5s}
+.btn:hover{background:var(--action-hover);border-color:var(--action-hover)}
+.btn.soft{background:var(--card);border-color:var(--card);color:var(--ink)}
+.btn.soft:hover{background:var(--card-2);border-color:var(--card-2)}
+.btn.line{background:none;border-color:var(--field);color:var(--ink)}
+.btn.line:hover{background:var(--card-2);border-color:var(--field)}
+.btn.danger{background:none;border-color:var(--danger);color:var(--danger)}
+.btn.danger:hover{background:var(--danger-bg)}
+.btn.big{min-height:64px;font-size:17px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn svg{font-size:18px}
+.link{border:0;background:none;padding:0;color:var(--accent);font:500 14px/1.5 var(--font);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.toolbar,.shoot,.navbtns,.actions{display:flex;gap:10px;flex-wrap:wrap}
+.toolbar>*,.navbtns>*{flex:1}
+.toolbar .btn{padding-left:18px;padding-right:18px;white-space:nowrap}
+.shoot>.big{flex:2 1 220px}.shoot>.btn:not(.big){flex:1 1 120px}
+
+.banner{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:828px;width:calc(100% - 32px);margin:12px auto 0;padding:14px 18px;border-radius:var(--radius-card);background:var(--card);color:var(--ink-body);font-size:14px;line-height:1.5}
+.banner p{flex:1 1 220px;margin:0}
+.banner .btn{min-height:40px;padding:10px 20px}
+.tplrow{margin:12px 4px 0}
+.note{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:14px 18px;border-radius:var(--radius-card);background:var(--card);font-size:14px;line-height:1.5}
+.note p{flex:1 1 240px;margin:0}
+.note.alert{background:var(--danger-bg);color:var(--ink)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.stats div{background:var(--card);border-radius:var(--radius-xs);padding:16px 4px 12px;text-align:center}
+.stats b{display:block;font-size:30px;line-height:1.2;font-weight:700;color:var(--ink)}
+.stats span{display:block;font-size:13px;line-height:18px;color:var(--ink-muted)}
+
+.filters{display:flex;gap:8px;margin-bottom:12px}
+.filters input{flex:1}
+input[type=search],input[type=number],select,textarea{min-width:0;max-width:100%;min-height:48px;padding:10px 18px;border:1.5px solid var(--field);border-radius:var(--radius-pill);background:var(--card);color:var(--ink);font:400 16px/23px var(--font)}
+select{padding-right:14px}
+textarea{width:100%;min-height:140px;border-radius:var(--radius-card);padding:12px 16px}
+.card select,.card input{width:100%}
+.filters select{flex:0 0 auto}
+
+.list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.list li{min-width:0}
+.list a{display:flex;align-items:center;gap:14px;min-height:64px;padding:12px 18px;border-radius:var(--radius-card);background:var(--card);color:inherit;text-decoration:none;transition:box-shadow .3s}
+.list a:hover{box-shadow:var(--shadow-hover)}
+.dot{flex:none;width:14px;height:14px;border:2px solid var(--ink-muted);border-radius:50%}
+.done .dot{border-color:var(--accent);background:var(--accent)}
+.hasdmg .dot{border-color:var(--danger);background:var(--danger)}
+.list .txt{flex:1;min-width:0}
+.list .txt b{display:block;font-size:16px;line-height:21px;font-weight:600;color:var(--ink);word-break:break-all}
+.list .txt small{display:block;font-size:14px;line-height:20px;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{text-align:right;font-size:14px;line-height:20px;color:var(--ink-muted);white-space:nowrap}
+.badge .d{display:block;color:var(--danger);font-weight:500}
+.list svg{font-size:16px;color:var(--accent-icon)}
+#more{width:100%;margin-top:10px}
+
+.empty{padding:8px 0 0}
+.empty .lead{margin:6px 0 18px;font-size:19px;line-height:25px;color:var(--ink)}
+.steps{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:8px;counter-reset:s}
+.steps li{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:var(--radius-card);background:var(--card);counter-increment:s}
+.steps li::before{content:counter(s);flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:15px}
+.steps b{display:block;color:var(--ink);font-weight:700}
+.steps span{font-size:14px;line-height:1.5}
+.nothing{padding:26px 10px;text-align:center;color:var(--ink-muted)}
+
+.card{padding:16px 18px;border-radius:var(--radius-card);background:var(--card);margin-bottom:12px}
+.info div{display:flex;gap:12px;font-size:15px;line-height:22px}
+.info .k{min-width:84px;color:var(--ink-muted)}
+.info .v{color:var(--ink);font-weight:500}
+.dmgbar{display:grid;gap:10px;transition:background .3s}
+.dmgbar.on{background:var(--danger-bg)}
+.dmgbar .row1{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.switch{display:flex;align-items:center;gap:12px;min-height:48px;font-weight:500;color:var(--ink);cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:30px;margin:0;border-radius:var(--radius-pill);background:var(--tab);position:relative;cursor:pointer;transition:background .3s}
+.switch input::after{content:"";position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px #0005;transition:transform .3s}
+.switch input:checked{background:var(--danger)}
+.switch input:checked::after{transform:translateX(22px)}
+.dmgbar select{flex:1 1 170px}
+#camLbl.dmg{background:var(--danger);border-color:var(--danger);color:var(--on-danger)}
+.next{margin:12px 2px 0;font-size:14px;line-height:1.5;color:var(--ink-muted)}
+.next .mono{font-weight:500}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:18px 0}
+.grid figure{margin:0;display:flex;flex-direction:column;overflow:hidden;border-radius:var(--radius-md);background:var(--card);transition:box-shadow .3s}
+.grid figure:hover{box-shadow:var(--shadow-hover)}
+.grid figure.dmg{box-shadow:inset 0 0 0 3px var(--danger)}
+.grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--card-2);cursor:zoom-in}
+.grid figcaption{padding:8px 10px 4px;font:500 12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--ink);word-break:break-all}
+.grid .row{display:flex;gap:6px;padding:4px 8px 8px}
+.grid .row select{flex:1;min-height:40px;padding:6px 12px;font-size:13px}
+.grid .row button{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1.5px solid var(--field);border-radius:var(--radius-pill);background:none;color:var(--danger);font-size:18px;cursor:pointer;transition:background .3s}
+.grid .row button:hover{background:var(--danger-bg)}
+.grid .none{grid-column:1/-1;padding:22px 10px;text-align:center;color:var(--ink-muted);font-size:15px}
+.navbtns{margin-top:22px}
+
+dialog{width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);padding:0;border:0;border-radius:var(--radius-card);background:var(--page);color:var(--ink-body);box-shadow:var(--shadow-glass)}
+dialog::backdrop{background:var(--overlay)}
+.dlg{display:flex;flex-direction:column;gap:16px;padding:22px 20px}
+.dlg label{display:flex;flex-direction:column;gap:6px;font-size:15px;font-weight:500;color:var(--ink)}
+.dlg label.chk{flex-direction:row;align-items:center;gap:12px}
+.dlg label.chk input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--accent)}
+.dlg label .hint{font-weight:400}
+.dlg fieldset{margin:0;padding:12px 16px;border:1.5px solid var(--field);border-radius:var(--radius-card)}
+.dlg legend{padding:0 6px;font-size:14px;font-weight:500;color:var(--ink)}
+.dlg .actions{justify-content:flex-end;align-items:center}
+.cols{display:flex;flex-wrap:wrap;gap:4px 18px}
+.cols label{flex-direction:row;align-items:center;gap:8px;min-height:36px;font-weight:400}
+.cols input{width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.preview{max-height:190px;overflow:auto;border-radius:var(--radius-md);background:var(--card)}
+.preview table{border-collapse:collapse;white-space:nowrap;font-size:13px}
+.preview td,.preview th{padding:5px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.preview th{color:var(--ink);font-weight:600}
+.preview .key{background:var(--tab);color:var(--ink);font-weight:600}
+progress{width:100%;height:10px;accent-color:var(--accent)}
+.shares{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+
+.faq{border-radius:var(--radius-lg);background:var(--card);margin-bottom:8px}
+.faq summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:12px 18px;font-weight:600;color:var(--ink);cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary svg{font-size:14px;color:var(--accent-icon);transition:transform .3s}
+.faq[open] summary svg{transform:rotate(90deg)}
+.faq .body{padding:0 18px 16px;font-size:15px;line-height:1.55}
+.faq .body p{margin:0 0 8px}
+.faq .body p:last-child{margin:0}
+
+#tutorDlg{width:min(520px,calc(100vw - 16px))}
+.tutor{display:flex;flex-direction:column;gap:14px;padding:22px 20px 20px}
+.tutor .art{display:grid;place-items:center;height:150px;border-radius:var(--radius-card);background:var(--card)}
+.tutor .art svg{width:112px;height:112px;fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.tutor .art svg .f{fill:var(--accent);stroke:none}
+.tutor .count{margin:0;font-size:14px;line-height:1;font-weight:600;color:var(--ink-muted)}
+.tutor h2{font-size:28px;line-height:1.2}
+.tutor .txt{margin:0;font-size:16px;line-height:25px;color:var(--ink-body);min-height:100px}
+.tutor .txt .mono{display:inline-block;margin-top:4px}
+.dots{display:flex;gap:8px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--tab);transition:all .3s}
+.dots i.on{width:26px;border-radius:var(--radius-pill);background:var(--accent)}
+.tutor .actions{justify-content:space-between}
+
+#viewDlg{width:auto;max-width:100vw;max-height:100vh;background:#000;border-radius:var(--radius-md)}
+#viewDlg img{display:block;max-width:100vw;max-height:92vh}
+#viewDlg p{margin:0;padding:8px 12px;color:#fff;font:500 12px ui-monospace,monospace}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));z-index:20;max-width:calc(100vw - 32px);padding:14px 22px;border-radius:var(--radius-pill);background:var(--action);color:var(--on-action);font-size:15px;line-height:1.3;font-weight:500;box-shadow:var(--shadow-glass);transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .3s}
+#toast.show{opacity:1}
+#toast.err{background:var(--danger);color:var(--on-danger)}
+#busy{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:var(--overlay)}
+#busy div{padding:18px 28px;border-radius:var(--radius-card);background:var(--card);color:var(--ink);font-weight:600;box-shadow:var(--shadow-glass)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:380px){.stats b{font-size:26px}.btn{padding-left:22px;padding-right:22px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chev" viewBox="0 0 256 512"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 448 512"><path d="M313.941 216H12c-6.627 0-12 5.373-12 12v56c0 6.627 5.373 12 12 12h301.941v46.059c0 21.382 25.851 32.09 40.971 16.971l86.059-86.059c9.373-9.373 9.373-24.569 0-33.941l-86.059-86.059c-15.119-15.119-40.971-4.411-40.971 16.971V216z"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9 4 7.5 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5L15 4H9zm3 4.5a4.25 4.25 0 1 1 0 8.5 4.25 4.25 0 0 1 0-8.5zm0 2a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v8.6l3.5-3.6 3 3 4-5 4.5 5.4V7H5zm3 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 9z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M3 6h9v2H3zM18 6h3v2h-3zM3 16h3v2H3zM12 16h9v2h-9z"/><circle cx="15" cy="7" r="3"/><circle cx="9" cy="17" r="3"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v3h5V5H6zm7 0v3h5V5h-5zM6 10v3h5v-3H6zm7 0v3h5v-3h-5zM6 15v3h5v-3H6zm7 0v3h5v-3h-5z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3v10.2l3.3-3.3 1.4 1.4L12 16l-4.7-4.7 1.4-1.4 3.3 3.3V3h0zM4 17h2v2h12v-2h2v4H4v-4z"/></symbol>
+</svg>
+
+<header class="top">
+  <button id="backBtn" class="round hidden" type="button" aria-label="Wróć do listy"><svg class="i flip"><use href="#i-chev"/></svg></button>
+  <h1 id="title">Foto ATM</h1>
+  <span id="net" class="net hidden" title="Brak internetu. Aplikacja działa dalej, a zdjęcia zapisują się na telefonie.">offline</span>
+  <button id="helpBtn" class="round" type="button" aria-label="Pomoc i samouczek">?</button>
+  <button id="settingsBtn" class="round" type="button" aria-label="Ustawienia"><svg class="i"><use href="#i-sliders"/></svg></button>
+</header>
+<div id="updateBar" class="banner hidden"><p>Jest nowa wersja aplikacji. Odśwież, kiedy skończysz bieżące zdjęcie.</p><button id="updateBtn" class="btn" type="button">Odśwież</button></div>
+<div id="installBar" class="banner hidden"><p id="installTxt"></p><button id="installBtn" class="btn hidden" type="button">Zainstaluj</button><button id="installClose" class="btn line" type="button">Ukryj</button></div>
+
+<main>
+  <section id="listView">
+    <div class="toolbar">
+      <label class="btn"><svg class="i"><use href="#i-sheet"/></svg>Importuj Excel<input type="file" id="xlsIn" accept=".xlsx,.xls,.xlsm,.ods,.csv" hidden></label>
+      <button id="exportBtn" class="btn soft" type="button"><svg class="i"><use href="#i-box"/></svg>Eksport ZIP</button>
+    </div>
+    <p class="hint tplrow">Nie masz jeszcze pliku? <button class="link" type="button" data-tpl>Pobierz wzór Excela</button></p>
+    <div id="backupWarn" class="note alert hidden">
+      <p id="backupTxt"></p>
+      <button id="backupWhy" class="link" type="button">Dlaczego to ważne</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div id="filtersBox" class="filters">
+      <input type="search" id="q" placeholder="Szukaj numeru lub adresu" aria-label="Szukaj numeru lub adresu" autocomplete="off">
+      <select id="fStatus" aria-label="Pokaż pozycje">
+        <option value="all">wszystkie</option>
+        <option value="todo">bez zdjęć</option>
+        <option value="done">ze zdjęciami</option>
+        <option value="dmg">z uszkodzeniami</option>
+      </select>
+    </div>
+    <ul id="list" class="list"></ul>
+    <button id="more" class="btn soft hidden" type="button">Pokaż więcej</button>
+    <div id="empty" class="hidden"></div>
+  </section>
+
+  <section id="itemView" class="hidden">
+    <div id="itemInfo" class="card info"></div>
+    <div class="card dmgbar" id="dmgBar">
+      <div class="row1">
+        <label class="switch"><input type="checkbox" id="dmgOn">Uszkodzenie</label>
+        <select id="dmgType" aria-label="Rodzaj uszkodzenia"></select>
+      </div>
+      <p class="hint" id="dmgHelp">Włącz przed zrobieniem zdjęcia, jeśli bankomat jest uszkodzony. Nazwa pliku dostanie dopisek z rodzajem uszkodzenia.</p>
+    </div>
+    <div class="shoot">
+      <label class="btn big" id="camLbl"><svg class="i"><use href="#i-camera"/></svg><span id="camTxt">Zrób zdjęcie</span><input type="file" id="camIn" accept="image/*" capture="environment" hidden></label>
+      <label class="btn soft"><svg class="i"><use href="#i-image"/></svg>Z galerii<input type="file" id="galIn" accept="image/*" multiple hidden></label>
+    </div>
+    <p class="next" id="nextName"></p>
+    <div id="grid" class="grid"></div>
+    <div class="navbtns">
+      <button id="prevBtn" class="btn soft" type="button"><svg class="i flip"><use href="#i-chev"/></svg>Poprzednia</button>
+      <button id="nextBtn" class="btn soft" type="button">Następna<svg class="i"><use href="#i-chev"/></svg></button>
+    </div>
+  </section>
+</main>
+
+<dialog id="importDlg">
+  <form method="dialog" class="dlg">
+    <h2>Import z Excela</h2>
+    <p class="hint">Wskaż, gdzie w arkuszu jest numer bankomatu. Resztę ustawiam sam, możesz ją zmienić.</p>
+    <label>Arkusz <select id="imSheet"></select></label>
+    <label class="chk"><input type="checkbox" id="imHdr" checked>Pierwszy wiersz to nagłówki kolumn</label>
+    <label>Kolumna z numerem głównym
+      <select id="imKey"></select>
+      <span class="hint">To numer, od którego zaczną się nazwy zdjęć, np. <b>ATM-0001</b>_01.jpg.</span>
+    </label>
+    <fieldset><legend>Kolumny dodatkowe (opcjonalnie)</legend>
+      <div id="imInfo" class="cols"></div>
+      <p class="hint" style="margin-top:6px">Zaznaczone kolumny, np. adres, zobaczysz przy każdej pozycji i w pliku manifest.csv.</p>
+    </fieldset>
+    <div class="preview" id="imPrev"></div>
+    <p class="hint">Możesz importować ponownie, kiedy lista się zmieni. Pozycje, które już masz, zachowają zdjęcia. Puste i powtórzone numery zostaną pominięte.</p>
+    <div class="actions">
+      <button class="btn line" value="cancel">Anuluj</button>
+      <button class="btn" value="ok">Importuj</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="exportDlg">
+  <form method="dialog" class="dlg">
+    <h2>Eksport ZIP</h2>
+    <p class="hint">Pakuje zdjęcia w pliki ZIP, które przeniesiesz na komputer, pendrive lub dysk. Dołączam manifest.csv, czyli tabelę do otwarcia w Excelu z nazwami plików, datami i uszkodzeniami.</p>
+    <p id="exSum" class="hint"></p>
+    <label>Układ plików
+      <select id="exStruct">
+        <option value="folders">osobny folder dla każdego numeru</option>
+        <option value="flat">wszystkie zdjęcia w jednym folderze</option>
+      </select>
+    </label>
+    <label>Największy rozmiar jednej paczki (MB)
+      <input type="number" id="exPart" min="50" max="4000" step="50">
+      <span class="hint">Gdy zdjęć jest dużo, powstanie kilka mniejszych paczek. Słabszy telefon radzi sobie z nimi lepiej.</span>
+    </label>
+    <label class="chk"><input type="checkbox" id="exOnlyNew">Tylko zdjęcia zrobione od ostatniego eksportu</label>
+    <div id="exProg" class="hidden"><progress max="100" value="0"></progress><p class="hint" id="exProgTxt"></p><div id="exShare" class="shares"></div></div>
+    <div class="actions">
+      <button class="btn line" value="cancel" id="exClose">Zamknij</button>
+      <button class="btn" type="button" id="exGo">Eksportuj</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="settingsDlg">
+  <form method="dialog" class="dlg">
+    <h2>Ustawienia</h2>
+    <label>Rozmiar zdjęć
+      <select id="stMax">
+        <option value="1600">1600 px, małe pliki</option>
+        <option value="2048">2048 px, zalecane</option>
+        <option value="2560">2560 px</option>
+        <option value="3200">3200 px</option>
+        <option value="4096">4096 px</option>
+        <option value="0">oryginał, bez zmniejszania</option>
+      </select>
+      <span class="hint">Zdjęcia z telefonu są ogromne. Zmniejszam je zaraz po zrobieniu, żeby mieściły się w pamięci i szybciej się pakowały. 2048 px wystarcza do dokumentacji.</span>
+    </label>
+    <label>Jakość JPEG
+      <select id="stQ">
+        <option value="0.7">70%</option><option value="0.8">80%</option><option value="0.85">85%, zalecane</option><option value="0.9">90%</option><option value="0.95">95%</option>
+      </select>
+    </label>
+    <label>Rodzaje uszkodzeń
+      <textarea id="stDmg"></textarea>
+      <span class="hint">Jeden rodzaj w wierszu. Numer rodzaju w nazwie pliku (np. <b>_USZ2</b>-1) to miejsce na tej liście. Nowe rodzaje dopisuj na końcu, bo zmiana kolejności zmieni nazwy zdjęć, które już zrobiłeś.</span>
+    </label>
+    <p class="hint" id="stStorage"></p>
+    <div class="actions">
+      <button class="btn danger" type="button" id="stWipe">Usuń wszystkie dane</button>
+      <span style="flex:1"></span>
+      <button class="btn line" value="cancel">Anuluj</button>
+      <button class="btn" value="ok">Zapisz</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="helpDlg">
+  <form method="dialog" class="dlg">
+    <h2>Pomoc</h2>
+    <button class="btn" type="button" id="helpTutor">Pokaż samouczek</button>
+    <div>
+      <details class="faq"><summary>Jak nazywane są zdjęcia?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Numer bankomatu z Excela i kolejny numer zdjęcia: <code>ATM-0001_01.jpg</code>, <code>_02</code>, <code>_03</code>.</p>
+        <p>Uszkodzenie dostaje dopisek, np. <code>ATM-0001_03_USZ2-1.jpg</code>. To rodzaj uszkodzenia nr 2 i pierwsze takie zdjęcie w tej pozycji.</p>
+        <p>Znaki, których nie lubią komputery (ukośniki, dwukropki, spacje), zamieniam na myślnik.</p></div></details>
+      <details class="faq"><summary>Jak oznaczyć uszkodzenie?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Włącz przełącznik „Uszkodzenie”, wybierz rodzaj i zrób zdjęcie. Przycisk aparatu zmieni kolor, żebyś nie pomylił trybu.</p>
+        <p>Pomyłka? Rodzaj zmienisz później na liście pod zdjęciem.</p></div></details>
+      <details class="faq"><summary>Zrobiłem zdjęcie przez pomyłkę<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Dotknij kosza pod miniaturą. Następne zdjęcia dostaną nowe numery, więc w numeracji nie będzie dziur.</p></div></details>
+      <details class="faq" id="faqBackup"><summary>Gdzie są moje zdjęcia?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Tylko w tej aplikacji na telefonie. Nie trafiają do galerii ani do chmury.</p>
+        <p>Jeśli usuniesz aplikację albo wyczyścisz dane przeglądarki, znikną. Rób „Eksport ZIP” po każdym dniu pracy i zapisz paczkę na komputerze lub dysku.</p></div></details>
+      <details class="faq"><summary>Czy działa bez internetu?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Tak. Internet jest potrzebny raz, żeby pobrać aplikację, i przy aktualizacjach. Import, zdjęcia i eksport działają bez zasięgu.</p>
+        <p>W Ustawieniach zobaczysz, czy tryb offline jest gotowy.</p></div></details>
+      <details class="faq"><summary>Jak dodać aplikację do ekranu głównego?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p><b>Android (Chrome):</b> menu z trzema kropkami, potem „Zainstaluj aplikację”.</p>
+        <p><b>iPhone (Safari):</b> przycisk „Udostępnij”, potem „Do ekranu początkowego”. Pracuj wtedy tylko w aplikacji z ekranu początkowego, bo Safari i aplikacja mają osobną pamięć na zdjęcia.</p></div></details>
+      <details class="faq"><summary>Jak ma wyglądać plik Excel?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Wystarczy jedna kolumna z numerami bankomatów. Pierwszy wiersz to nagłówki, np. „Numer ATM”, „Adres”, „Miasto”. Dodatkowe kolumny są opcjonalne.</p>
+        <p><button class="link" type="button" data-tpl>Pobierz gotowy wzór</button></p></div></details>
+      <details class="faq"><summary>Dostałem nową listę z Excela<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Zaimportuj ją ponownie. Pozycje, które już masz, zachowają zdjęcia, a nowe dopiszą się na końcu listy.</p></div></details>
+      <details class="faq"><summary>Co dostanę w eksporcie?<svg class="i"><use href="#i-chev"/></svg></summary>
+        <div class="body"><p>Pliki ZIP z folderami według numerów bankomatów i tabelę <code>manifest.csv</code> do otwarcia w Excelu. Na Androidzie paczki trafiają do „Pobrane”. Na iPhonie zapisujesz je przyciskiem „Zapisz paczkę”, a potem „Zachowaj w Plikach”.</p></div></details>
+    </div>
+    <div class="actions"><button class="btn line" value="cancel">Zamknij</button></div>
+  </form>
+</dialog>
+
+<dialog id="tutorDlg">
+  <div class="tutor">
+    <div class="art" id="tArt" aria-hidden="true"></div>
+    <p class="count" id="tCount"></p>
+    <h2 id="tTitle"></h2>
+    <p class="txt" id="tText"></p>
+    <div class="dots" id="tDots" aria-hidden="true"></div>
+    <div class="actions">
+      <button class="btn line" type="button" id="tSkip">Pomiń</button>
+      <span style="display:flex;gap:10px">
+        <button class="btn soft" type="button" id="tPrev">Wstecz</button>
+        <button class="btn" type="button" id="tNext">Dalej</button>
+      </span>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="viewDlg"><form method="dialog"><button style="all:unset;display:block;cursor:zoom-out"><img id="viewImg" alt=""><p id="viewName"></p></button></form></dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="busy" class="hidden"><div id="busyTxt">Zapisywanie…</div></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const DEF = {maxDim: 2048, quality: 0.85, structure: 'folders', partMB: IOS ? 200 : 400,
+  dmgTypes: ['Wyświetlacz', 'Klawiatura', 'Czytnik kart', 'Obudowa', 'Inne'],
+  keyLabel: '', infoLabels: [], lastExport: 0};
+let cfg = loadCfg();
+function loadCfg() {
+  try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem('atmcfg') || '{}')); }
+  catch (e) { return Object.assign({}, DEF); }
+}
+function saveCfg() { try { localStorage.setItem('atmcfg', JSON.stringify(cfg)); } catch (e) {} }
+
+let db;
+const rq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const txDone = tx => new Promise((res, rej) => {
+  tx.oncomplete = () => res();
+  tx.onerror = tx.onabort = () => rej(tx.error || new Error('Zapis przerwany (brak miejsca?)'));
+});
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('atm-foto', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('items', {keyPath: 'id'});
+      const p = d.createObjectStore('photos', {keyPath: 'pid', autoIncrement: true});
+      p.createIndex('byItem', 'itemId');
+      p.createIndex('byTs', 'ts');
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function allItems() {
+  const a = await rq(db.transaction('items').objectStore('items').getAll());
+  return a.sort((x, y) => x.order - y.order);
+}
+const getItem = id => rq(db.transaction('items').objectStore('items').get(id));
+async function itemPhotos(id) {
+  const a = await rq(db.transaction('photos').objectStore('photos').index('byItem').getAll(id));
+  return a.sort((x, y) => x.ts - y.ts || x.pid - y.pid);
+}
+async function addPhoto(itemId, blob, dmg) {
+  const tx = db.transaction(['items', 'photos'], 'readwrite');
+  const is = tx.objectStore('items');
+  tx.objectStore('photos').add({itemId, ts: Date.now(), dmg, blob});
+  const it = await rq(is.get(itemId));
+  it.n = (it.n || 0) + 1;
+  if (dmg) it.d = (it.d || 0) + 1;
+  is.put(it);
+  await txDone(tx);
+}
+async function deletePhoto(p) {
+  const tx = db.transaction(['items', 'photos'], 'readwrite');
+  const is = tx.objectStore('items');
+  tx.objectStore('photos').delete(p.pid);
+  const it = await rq(is.get(p.itemId));
+  it.n = Math.max(0, (it.n || 0) - 1);
+  if (p.dmg) it.d = Math.max(0, (it.d || 0) - 1);
+  is.put(it);
+  await txDone(tx);
+}
+async function setPhotoDmg(p, dmg) {
+  const tx = db.transaction(['items', 'photos'], 'readwrite');
+  const is = tx.objectStore('items');
+  const was = p.dmg ? 1 : 0;
+  p.dmg = dmg;
+  tx.objectStore('photos').put(p);
+  const it = await rq(is.get(p.itemId));
+  it.d = Math.max(0, (it.d || 0) - was + (dmg ? 1 : 0));
+  is.put(it);
+  await txDone(tx);
+}
+async function countSince(ts) {
+  return rq(db.transaction('photos').objectStore('photos').index('byTs').count(IDBKeyRange.lowerBound(ts, true)));
+}
+
+function safe(s) {
+  return String(s).trim().replace(/[\\/:*?"<>|\x00-\x1f\s]+/g, '-').replace(/^[.-]+|[.-]+$/g, '') || 'BEZ-NUMERU';
+}
+function ext(b) {
+  const t = (b && b.type) || '';
+  return t.includes('png') ? '.png' : t.includes('webp') ? '.webp' : t.includes('hei') ? '.heic' : '.jpg';
+}
+function names(item, photos) {
+  const w = Math.max(2, String(photos.length).length);
+  const cnt = {};
+  const base = safe(item.id);
+  return photos.map((p, i) => {
+    let n = base + '_' + String(i + 1).padStart(w, '0');
+    if (p.dmg) { cnt[p.dmg] = (cnt[p.dmg] || 0) + 1; n += '_USZ' + p.dmg + '-' + cnt[p.dmg]; }
+    return n + ext(p.blob);
+  });
+}
+const dmgName = k => k ? (cfg.dmgTypes[k - 1] || ('rodzaj ' + k)) : '';
+
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(u); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Nieobsługiwany format zdjęcia')); };
+    img.src = u;
+  });
+}
+async function prep(file) {
+  if (!cfg.maxDim) return file;
+  let src, w, h;
+  try {
+    src = await createImageBitmap(file, {imageOrientation: 'from-image'});
+    w = src.width; h = src.height;
+  } catch (e) {
+    try { src = await loadImg(file); w = src.naturalWidth; h = src.naturalHeight; }
+    catch (e2) { toast('Nie można zmniejszyć zdjęcia, zapisano oryginał', true); return file; }
+  }
+  const s = Math.min(1, cfg.maxDim / Math.max(w, h));
+  if (s === 1 && file.type === 'image/jpeg') { if (src.close) src.close(); return file; }
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  const g = c.getContext('2d');
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(src, 0, 0, c.width, c.height);
+  if (src.close) src.close();
+  const b = await new Promise(r => c.toBlob(r, 'image/jpeg', cfg.quality));
+  c.width = c.height = 0;
+  if (!b) throw new Error('Nie udało się zapisać zdjęcia (za mało pamięci?)');
+  return b;
+}
+
+let toastT;
+function toast(msg, err) {
+  const t = $('#toast');
+  t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', err ? 4500 : 2500);
+}
+function busy(on, txt) { $('#busy').classList.toggle('hidden', !on); if (txt) $('#busyTxt').textContent = txt; }
+const libs = {};
+function loadLib(src) {
+  return libs[src] || (libs[src] = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res;
+    s.onerror = () => { delete libs[src]; rej(new Error('Nie można wczytać ' + src)); };
+    document.head.appendChild(s);
+  }));
+}
+async function askPersist() {
+  try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) {}
+}
+const infoText = it => Object.values(it.info || {}).filter(Boolean).join(' · ');
+
+let items = [], shown = 150;
+async function refreshList() { items = await allItems(); renderList(); renderStats(); updateBackupWarn(); }
+function filtered() {
+  const q = $('#q').value.trim().toLowerCase(), f = $('#fStatus').value;
+  return items.filter(it =>
+    (f === 'all' || (f === 'todo' && !it.n) || (f === 'done' && it.n) || (f === 'dmg' && it.d)) &&
+    (!q || it.id.toLowerCase().includes(q) || infoText(it).toLowerCase().includes(q)));
+}
+function renderList() {
+  const fl = filtered();
+  $('#list').innerHTML = fl.slice(0, shown).map(it => `
+    <li><a href="#/item/${encodeURIComponent(it.id)}" class="${it.d ? 'hasdmg' : it.n ? 'done' : ''}">
+      <i class="dot"></i>
+      <span class="txt"><b>${esc(it.id)}</b><small>${esc(infoText(it)) || 'bez dodatkowych danych'}</small></span>
+      <span class="badge">${it.n ? it.n + ' zdj.' : 'brak zdjęć'}${it.d ? `<span class="d">${it.d} uszk.</span>` : ''}</span>
+      <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+    </a></li>`).join('');
+  $('#more').classList.toggle('hidden', fl.length <= shown);
+  $('#more').textContent = `Pokaż więcej (${fl.length - shown})`;
+  const em = $('#empty'), none = !items.length;
+  $('#filtersBox').classList.toggle('hidden', none);
+  $('#stats').classList.toggle('hidden', none);
+  em.classList.toggle('hidden', !none && fl.length > 0);
+  em.innerHTML = none ? EMPTY_HTML : '<p class="nothing">Żadna pozycja nie pasuje do wyszukiwania.</p>';
+  if (none) {
+    $('#emptyImport').onclick = () => $('#xlsIn').click();
+    $('#emptyTutor').onclick = openTutorial;
+  }
+}
+const EMPTY_HTML = `<div class="empty">
+  <h2>Zacznij od listy bankomatów</h2>
+  <p class="lead">Wgraj plik Excel z numerami. Dalej poprowadzę Cię krok po kroku.</p>
+  <ol class="steps">
+    <li><div><b>Wgraj listę</b><span>Plik z numerami bankomatów, najlepiej z adresami.</span></div></li>
+    <li><div><b>Rób zdjęcia</b><span>Nazwy nadam sam, według numeru bankomatu.</span></div></li>
+    <li><div><b>Zapisz kopię</b><span>Eksport ZIP przenosi zdjęcia na komputer lub dysk.</span></div></li>
+  </ol>
+  <div class="toolbar"><button id="emptyImport" class="btn" type="button">Importuj Excel</button><button class="btn soft" type="button" data-tpl>Pobierz wzór Excela</button></div>
+  <p class="hint" style="margin-top:14px"><button id="emptyTutor" class="link" type="button">Pokaż samouczek</button></p>
+</div>`;
+function renderStats() {
+  const done = items.filter(i => i.n).length;
+  const ph = items.reduce((s, i) => s + (i.n || 0), 0), dm = items.reduce((s, i) => s + (i.d || 0), 0);
+  $('#stats').innerHTML = `<div><b>${items.length}</b><span>pozycji</span></div><div><b>${done}</b><span>ze zdjęciami</span></div>` +
+    `<div><b>${ph}</b><span>zdjęć</span></div><div><b>${dm}</b><span>uszkodzeń</span></div>`;
+}
+async function updateBackupWarn() {
+  const n = await countSince(cfg.lastExport || 0);
+  $('#backupWarn').classList.toggle('hidden', !n);
+  $('#backupTxt').textContent = `${n} zdj. czeka na kopię zapasową` +
+    (cfg.lastExport ? ` (ostatni eksport: ${new Date(cfg.lastExport).toLocaleString('pl-PL')})` : '') +
+    '. Zdjęcia są tylko na tym telefonie. Zrób Eksport ZIP.';
+}
+$('#q').addEventListener('input', () => { shown = 150; renderList(); });
+$('#fStatus').addEventListener('change', () => { shown = 150; renderList(); });
+$('#more').addEventListener('click', () => { shown += 300; renderList(); });
+
+let cur = null, curPhotos = [], urls = [];
+function fillDmgSelect() {
+  $('#dmgType').innerHTML = cfg.dmgTypes.map((t, i) => `<option value="${i + 1}">${i + 1}. ${esc(t)}</option>`).join('');
+}
+function updateCamBtn() {
+  const on = $('#dmgOn').checked;
+  $('#dmgBar').classList.toggle('on', on);
+  $('#camLbl').classList.toggle('dmg', on);
+  $('#camTxt').textContent = on ? `Uszkodzenie: ${dmgName(+$('#dmgType').value)}` : 'Zrób zdjęcie';
+  updateNextName();
+}
+const DMG_HELP = 'Włącz przed zrobieniem zdjęcia, jeśli bankomat jest uszkodzony. Nazwa pliku dostanie dopisek z rodzajem uszkodzenia.';
+function updateNextName() {
+  if (!cur) return;
+  const dmg = $('#dmgOn').checked ? +$('#dmgType').value : 0;
+  const all = names(cur, [...curPhotos, {dmg, blob: {type: 'image/jpeg'}}]);
+  $('#nextName').innerHTML = `Następne zdjęcie dostanie nazwę <span class="mono">${esc(all[all.length - 1])}</span>`;
+  $('#dmgHelp').textContent = dmg
+    ? `Rodzaj ${dmg}: ${dmgName(dmg)}. W nazwie pojawi się dopisek _USZ${dmg}-numer, czyli kolejne uszkodzenie tego rodzaju w tej pozycji.`
+    : DMG_HELP;
+}
+$('#dmgOn').addEventListener('change', updateCamBtn);
+$('#dmgType').addEventListener('change', () => { $('#dmgOn').checked = true; updateCamBtn(); });
+
+async function showItem(id) {
+  const it = await getItem(id);
+  if (!it) { location.hash = ''; return; }
+  const changed = !cur || cur.id !== it.id;
+  cur = it;
+  $('#title').textContent = it.id;
+  const inf = Object.entries(it.info || {}).filter(([, v]) => v);
+  $('#itemInfo').innerHTML = inf.length
+    ? inf.map(([k, v]) => `<div><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')
+    : `<div><span class="k">Numer</span><span class="v">${esc(it.id)}</span></div>`;
+  if (changed) { $('#dmgOn').checked = false; updateCamBtn(); window.scrollTo(0, 0); }
+  const idx = items.findIndex(i => i.id === it.id);
+  $('#prevBtn').disabled = idx <= 0;
+  $('#nextBtn').disabled = idx < 0 || idx >= items.length - 1;
+  await renderGrid();
+}
+function dmgOptions(sel) {
+  let o = `<option value="0"${sel ? '' : ' selected'}>Zwykłe</option>`;
+  cfg.dmgTypes.forEach((t, i) => { o += `<option value="${i + 1}"${sel === i + 1 ? ' selected' : ''}>USZ ${i + 1}. ${esc(t)}</option>`; });
+  if (sel > cfg.dmgTypes.length) o += `<option value="${sel}" selected>USZ ${sel}</option>`;
+  return o;
+}
+async function renderGrid() {
+  urls.forEach(u => URL.revokeObjectURL(u)); urls = [];
+  curPhotos = await itemPhotos(cur.id);
+  const nm = names(cur, curPhotos);
+  const g = $('#grid');
+  g.innerHTML = '';
+  curPhotos.forEach((p, i) => {
+    const u = URL.createObjectURL(p.blob); urls.push(u);
+    const f = document.createElement('figure');
+    if (p.dmg) f.className = 'dmg';
+    f.innerHTML = `<img src="${u}" alt="" loading="lazy"><figcaption>${esc(nm[i])}</figcaption>` +
+      `<div class="row"><select aria-label="Oznaczenie">${dmgOptions(p.dmg)}</select><button type="button" aria-label="Usuń zdjęcie"><svg class="i"><use href="#i-trash"/></svg></button></div>`;
+    f.querySelector('img').onclick = () => { $('#viewImg').src = u; $('#viewName').textContent = nm[i]; $('#viewDlg').showModal(); };
+    f.querySelector('select').onchange = async e => {
+      try { await setPhotoDmg(p, +e.target.value); cur = await getItem(cur.id); await renderGrid(); }
+      catch (err) { toast(err.message, true); }
+    };
+    f.querySelector('button').onclick = async () => {
+      if (!confirm(`Usunąć zdjęcie ${nm[i]}?\nNastępne zdjęcia zmienią numerację.`)) return;
+      try { await deletePhoto(p); cur = await getItem(cur.id); await renderGrid(); toast('Usunięto zdjęcie'); }
+      catch (err) { toast(err.message, true); }
+    };
+    g.appendChild(f);
+  });
+  if (!curPhotos.length) g.innerHTML = '<p class="none">Nie ma jeszcze zdjęć tej pozycji. Dotknij „Zrób zdjęcie”, a pojawią się tutaj.</p>';
+  updateNextName();
+}
+async function handleFiles(input) {
+  const files = [...input.files];
+  input.value = '';
+  if (!cur || !files.length) return;
+  const dmg = $('#dmgOn').checked ? +$('#dmgType').value : 0;
+  let ok = 0;
+  busy(true, 'Zapisywanie…');
+  for (const [i, f] of files.entries()) {
+    if (files.length > 1) $('#busyTxt').textContent = `Zapisywanie ${i + 1} z ${files.length}…`;
+    try { await addPhoto(cur.id, await prep(f), dmg); ok++; }
+    catch (err) { toast('Błąd zapisu: ' + err.message, true); }
+  }
+  busy(false);
+  cur = await getItem(cur.id);
+  await renderGrid();
+  if (ok) {
+    const nm = names(cur, curPhotos);
+    toast(ok === 1 ? 'Zapisano ' + nm[nm.length - 1] : `Zapisano ${ok} zdjęć`);
+    askPersist();
+  }
+}
+$('#camIn').addEventListener('change', e => handleFiles(e.target));
+$('#galIn').addEventListener('change', e => handleFiles(e.target));
+function go(delta) {
+  const idx = items.findIndex(i => i.id === cur.id) + delta;
+  if (items[idx]) location.replace('#/item/' + encodeURIComponent(items[idx].id));
+}
+$('#prevBtn').addEventListener('click', () => go(-1));
+$('#nextBtn').addEventListener('click', () => go(1));
+$('#backBtn').addEventListener('click', () => {
+  if (cameFromList) history.back(); else location.hash = '';
+});
+
+let onList = false, cameFromList = false;
+async function route() {
+  const m = location.hash.match(/^#\/item\/(.+)$/);
+  if (m) { if (onList) cameFromList = true; } else cameFromList = false;
+  onList = !m;
+  $('#listView').classList.toggle('hidden', !!m);
+  $('#itemView').classList.toggle('hidden', !m);
+  $('#backBtn').classList.toggle('hidden', !m);
+  if (m) {
+    if (!items.length) items = await allItems();
+    await showItem(decodeURIComponent(m[1]));
+  } else {
+    cur = null; urls.forEach(u => URL.revokeObjectURL(u)); urls = [];
+    $('#title').textContent = 'Foto ATM';
+    await refreshList();
+  }
+}
+window.addEventListener('hashchange', route);
+
+let wb = null;
+function sheetRows(name) {
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: false, defval: ''});
+  return rows.map(r => r.map(v => String(v ?? '').trim()));
+}
+function imState() {
+  const rows = sheetRows($('#imSheet').value);
+  const hdr = $('#imHdr').checked;
+  const ncol = rows.reduce((m, r) => Math.max(m, r.length), 0);
+  const labels = [];
+  for (let c = 0; c < ncol; c++) {
+    const L = XLSX.utils.encode_col(c);
+    labels.push(hdr && rows[0] && rows[0][c] ? rows[0][c] : 'Kolumna ' + L);
+  }
+  return {rows, hdr, ncol, labels};
+}
+function imRender(keepSel) {
+  const {rows, hdr, ncol, labels} = imState();
+  const key = $('#imKey');
+  const prevKey = keepSel ? +key.value : -1;
+  const prevInfo = keepSel ? [...document.querySelectorAll('#imInfo input:checked')].map(i => +i.value) : null;
+  let k = prevKey >= 0 && prevKey < ncol ? prevKey : labels.indexOf(cfg.keyLabel);
+  if (k < 0) k = labels.findIndex(l => /numer|nr|id|atm|terminal|bankomat/i.test(l));
+  if (k < 0) k = 0;
+  key.innerHTML = labels.map((l, c) => `<option value="${c}"${c === k ? ' selected' : ''}>${XLSX.utils.encode_col(c)}: ${esc(l)}</option>`).join('');
+  $('#imInfo').innerHTML = labels.map((l, c) => {
+    const on = prevInfo ? prevInfo.includes(c) : cfg.infoLabels.includes(l);
+    return `<label><input type="checkbox" value="${c}"${on ? ' checked' : ''}> ${esc(l)}</label>`;
+  }).join('') || '<span class="hint">Arkusz jest pusty.</span>';
+  const data = (hdr ? rows.slice(1) : rows).filter(r => r.some(Boolean)).slice(0, 6);
+  $('#imPrev').innerHTML = '<table><tr>' + labels.map((l, c) => `<th class="${c === k ? 'key' : ''}">${esc(l)}</th>`).join('') + '</tr>' +
+    data.map(r => '<tr>' + labels.map((_, c) => `<td class="${c === k ? 'key' : ''}">${esc(r[c])}</td>`).join('') + '</tr>').join('') + '</table>';
+}
+$('#imSheet').addEventListener('change', () => imRender(false));
+$('#imHdr').addEventListener('change', () => imRender(true));
+$('#imKey').addEventListener('change', () => imRender(true));
+
+$('#xlsIn').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  busy(true, 'Wczytywanie pliku…');
+  try {
+    await loadLib('lib/xlsx.full.min.js');
+    wb = XLSX.read(await f.arrayBuffer(), {type: 'array'});
+  } catch (err) { busy(false); toast('Nie można odczytać pliku: ' + err.message, true); return; }
+  busy(false);
+  $('#imSheet').innerHTML = wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join('');
+  imRender(false);
+  $('#importDlg').returnValue = '';
+  $('#importDlg').showModal();
+});
+$('#importDlg').addEventListener('close', async () => {
+  if ($('#importDlg').returnValue !== 'ok' || !wb) return;
+  const {rows, hdr, labels} = imState();
+  const key = +$('#imKey').value;
+  const infoIdx = [...document.querySelectorAll('#imInfo input:checked')].map(i => +i.value).filter(c => c !== key);
+  cfg.keyLabel = labels[key]; cfg.infoLabels = infoIdx.map(c => labels[c]); saveCfg();
+  busy(true, 'Importowanie…');
+  try {
+    items = await allItems();
+    const existing = new Map(items.map(i => [i.id, i]));
+    let order = items.reduce((m, i) => Math.max(m, i.order), -1);
+    const seen = new Set(), dup = new Set();
+    let added = 0, upd = 0, noKey = 0;
+    const tx = db.transaction('items', 'readwrite'), st = tx.objectStore('items');
+    for (const r of hdr ? rows.slice(1) : rows) {
+      const id = r[key] || '';
+      if (!id) { if (r.some(Boolean)) noKey++; continue; }
+      if (seen.has(id)) { dup.add(id); continue; }
+      seen.add(id);
+      const info = {};
+      infoIdx.forEach(c => { info[labels[c]] = r[c] || ''; });
+      const ex = existing.get(id);
+      if (ex) { ex.info = info; st.put(ex); upd++; }
+      else { st.put({id, info, order: ++order, n: 0, d: 0}); added++; }
+    }
+    await txDone(tx);
+    wb = null;
+    busy(false);
+    await refreshList();
+    askPersist();
+    let msg = `Import zakończony.\nNowe pozycje: ${added}\nZaktualizowane (zdjęcia zachowane): ${upd}`;
+    if (noKey) msg += `\nPominięte wiersze bez numeru: ${noKey}`;
+    if (dup.size) msg += `\nPowtórzone numery (pominięte): ${dup.size}\n` + [...dup].slice(0, 15).join(', ') + (dup.size > 15 ? '…' : '');
+    alert(msg);
+  } catch (err) { busy(false); toast('Błąd importu: ' + err.message, true); }
+});
+
+let exporting = false;
+$('#exportBtn').addEventListener('click', async () => {
+  items = await allItems();
+  const ph = items.reduce((s, i) => s + (i.n || 0), 0);
+  const nw = await countSince(cfg.lastExport || 0);
+  $('#exSum').textContent = `${ph} zdjęć w ${items.filter(i => i.n).length} pozycjach. Od ostatniego eksportu: ${nw}.`;
+  $('#exStruct').value = cfg.structure;
+  $('#exPart').value = cfg.partMB;
+  $('#exOnlyNew').checked = false;
+  $('#exOnlyNew').disabled = !cfg.lastExport;
+  $('#exProg').classList.add('hidden');
+  $('#exGo').disabled = false;
+  $('#exportDlg').showModal();
+});
+$('#exportDlg').addEventListener('cancel', e => { if (exporting) e.preventDefault(); });
+$('#exGo').addEventListener('click', async () => {
+  cfg.structure = $('#exStruct').value;
+  cfg.partMB = Math.max(50, +$('#exPart').value || 400);
+  saveCfg();
+  exporting = true;
+  $('#exGo').disabled = $('#exClose').disabled = true;
+  $('#exProg').classList.remove('hidden');
+  try { await doExport($('#exOnlyNew').checked ? cfg.lastExport : 0); }
+  catch (err) { alert('Eksport nie powiódł się: ' + err.message + '\nSpróbuj mniejszego rozmiaru paczki.'); }
+  exporting = false;
+  $('#exGo').disabled = $('#exClose').disabled = false;
+  updateBackupWarn();
+});
+function csvCell(v) { v = String(v ?? ''); return /[";\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function stamp(d) { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+async function doExport(since) {
+  const prog = $('#exProg progress'), ptxt = $('#exProgTxt');
+  ptxt.textContent = 'Przygotowanie listy…';
+  await loadLib('lib/jszip.min.js');
+  const started = Date.now();
+  const its = (await allItems()).filter(i => i.n);
+  const groups = [], infoKeys = [];
+  for (const it of its) {
+    Object.keys(it.info || {}).forEach(k => { if (!infoKeys.includes(k)) infoKeys.push(k); });
+    const ps = await itemPhotos(it.id), nm = names(it, ps);
+    const g = ps.map((p, i) => ({it, p, name: nm[i], nr: i + 1})).filter(e => e.p.ts > since);
+    if (g.length) groups.push(g);
+  }
+  if (!groups.length) { ptxt.textContent = 'Brak zdjęć do eksportu.'; return; }
+  const limit = cfg.partMB * 1048576, parts = [[]];
+  let size = 0;
+  for (const g of groups) {
+    const gs = g.reduce((s, e) => s + e.p.blob.size, 0);
+    if (size && size + gs > limit) { parts.push([]); size = 0; }
+    for (const e of g) {
+      if (size && size + e.p.blob.size > limit) { parts.push([]); size = 0; }
+      parts[parts.length - 1].push(e); size += e.p.blob.size;
+    }
+  }
+  const base = 'ATM-foto_' + stamp(new Date());
+  const hdr = ['plik', 'folder', 'numer_glowny', 'nr_zdjecia', 'uszkodzenie', 'nr_rodzaju', 'rodzaj_uszkodzenia', 'data_zdjecia', 'rozmiar_kB', ...infoKeys];
+  for (let pi = 0; pi < parts.length; pi++) {
+    const zip = new JSZip(), used = new Set(), lines = [hdr.map(csvCell).join(';')];
+    for (const e of parts[pi]) {
+      const folder = cfg.structure === 'folders' ? safe(e.it.id) : '';
+      let path = (folder ? folder + '/' : '') + e.name, k = 2;
+      while (used.has(path.toLowerCase())) path = path.replace(/(~\d+)?(\.\w+)$/, `~${k++}$2`);
+      used.add(path.toLowerCase());
+      zip.file(path, e.p.blob, {binary: true, date: new Date(e.p.ts)});
+      lines.push([path.split('/').pop(), folder, e.it.id, e.nr, e.p.dmg ? 'TAK' : 'NIE', e.p.dmg || '', dmgName(e.p.dmg),
+        new Date(e.p.ts).toLocaleString('pl-PL'), Math.round(e.p.blob.size / 1024),
+        ...infoKeys.map(k2 => (e.it.info || {})[k2] || '')].map(csvCell).join(';'));
+    }
+    zip.file('manifest.csv', '﻿' + lines.join('\r\n') + '\r\n');
+    const label = parts.length > 1 ? ` ${pi + 1} z ${parts.length}` : '';
+    const blob = await zip.generateAsync({type: 'blob', compression: 'STORE', streamFiles: true}, m => {
+      prog.value = (pi + m.percent / 100) / parts.length * 100;
+      ptxt.textContent = `Pakowanie paczki${label}: ${Math.round(m.percent)}%`;
+    });
+    const fname = base + (parts.length > 1 ? `_cz${pi + 1}z${parts.length}` : '') + '.zip';
+    const mb = (blob.size / 1048576).toFixed(1);
+    if (useShare(blob, fname)) {
+      ptxt.textContent = `Paczka${label} gotowa (${mb} MB).`;
+      await shareStep(blob, fname, label);
+    } else {
+      download(blob, fname);
+      ptxt.textContent = `Pobrano ${fname} (${mb} MB)`;
+      if (pi < parts.length - 1) await sleep(2500);
+    }
+  }
+  prog.value = 100;
+  cfg.lastExport = started; saveCfg();
+  const where = IOS ? 'Sprawdź aplikację Pliki.' : 'Sprawdź folder Pobrane.';
+  ptxt.textContent = parts.length > 1 ? `Gotowe: ${parts.length} paczki. ${where}` : `Gotowe: ${base}.zip. ${where}`;
+}
+function useShare(blob, fname) {
+  if (!IOS || !navigator.canShare) return false;
+  try { return navigator.canShare({files: [new File([blob], fname, {type: 'application/zip'})]}); } catch (e) { return false; }
+}
+function shareStep(blob, fname, label) {
+  return new Promise(resolve => {
+    const box = $('#exShare'), file = new File([blob], fname, {type: 'application/zip'});
+    box.innerHTML = `<button type="button" class="btn primary">Zapisz paczkę${label} (Udostępnij → Zachowaj w Plikach)</button>` +
+      `<button type="button" class="btn">Pobierz zamiast tego</button>`;
+    const [bShare, bDl] = box.querySelectorAll('button');
+    const finish = () => { box.innerHTML = ''; resolve(); };
+    bShare.onclick = async () => {
+      try { await navigator.share({files: [file], title: fname}); finish(); }
+      catch (err) { if (err.name !== 'AbortError') toast('Udostępnianie nie powiodło się: ' + err.message, true); }
+    };
+    bDl.onclick = () => { download(blob, fname); finish(); };
+  });
+}
+
+$('#settingsBtn').addEventListener('click', async () => {
+  $('#stMax').value = String(cfg.maxDim);
+  $('#stQ').value = String(cfg.quality);
+  $('#stDmg').value = cfg.dmgTypes.join('\n');
+  $('#stStorage').textContent = '';
+  $('#settingsDlg').returnValue = '';
+  $('#settingsDlg').showModal();
+  try {
+    const e = await navigator.storage.estimate(), p = await navigator.storage.persisted();
+    $('#stStorage').textContent = `Zajęte: ${(e.usage / 1048576).toFixed(0)} MB z ok. ${(e.quota / 1048576 / 1024).toFixed(1)} GB dostępnych. ` +
+      (p ? 'Pamięć trwała: włączona.' : 'Pamięć trwała: nie przyznana (przeglądarka może usunąć dane przy braku miejsca).');
+  } catch (e) {}
+  $('#stStorage').textContent += ' ' + await offlineStatus();
+});
+$('#settingsDlg').addEventListener('close', () => {
+  if ($('#settingsDlg').returnValue !== 'ok') return;
+  cfg.maxDim = +$('#stMax').value;
+  cfg.quality = +$('#stQ').value;
+  const t = $('#stDmg').value.split('\n').map(s => s.trim()).filter(Boolean);
+  cfg.dmgTypes = t.length ? t : DEF.dmgTypes.slice();
+  saveCfg();
+  fillDmgSelect(); updateCamBtn();
+  if (cur) renderGrid();
+  toast('Zapisano ustawienia');
+});
+$('#stWipe').addEventListener('click', async () => {
+  const ans = prompt('Usunięcie wszystkich pozycji i zdjęć z tego urządzenia jest nieodwracalne.\nUpewnij się, że masz eksport ZIP.\n\nWpisz USUŃ, aby potwierdzić:');
+  if ((ans || '').trim().toUpperCase() !== 'USUŃ') return;
+  const tx = db.transaction(['items', 'photos'], 'readwrite');
+  tx.objectStore('items').clear(); tx.objectStore('photos').clear();
+  await txDone(tx);
+  cfg.lastExport = 0; saveCfg();
+  $('#settingsDlg').close();
+  location.hash = '';
+  await refreshList();
+  toast('Usunięto wszystkie dane');
+});
+
+const TUTOR_KEY = 'atmTutorialDone';
+const TUTOR_STEPS = [
+  {t: 'Wgraj listę', art: '<rect x="10" y="8" width="44" height="48" rx="4"/><path d="M10 22h44M10 36h44M26 22v34"/>',
+   x: 'Zacznij od pliku Excel z numerami bankomatów. Wskażesz kolumnę z numerem głównym i, jeśli chcesz, kolumny z adresem. Gdy lista się zmieni, wgraj ją ponownie. Zdjęcia zostaną na miejscu.'},
+  {t: 'Zrób zdjęcia', art: '<path d="M8 22a4 4 0 0 1 4-4h8l4-6h16l4 6h8a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><circle cx="32" cy="36" r="10"/>',
+   x: 'Wejdź w pozycję i dotknij „Zrób zdjęcie”. Aplikacja sama nazwie plik numerem bankomatu i kolejnym numerem zdjęcia:<br><span class="mono">ATM-0001_01.jpg</span><br>Zdjęć może być tyle, ile trzeba.'},
+  {t: 'Oznacz uszkodzenia', art: '<path d="M32 8 58 54H6z"/><path d="M32 26v14"/><circle class="f" cx="32" cy="47" r="2.5"/>',
+   x: 'Włącz „Uszkodzenie”, wybierz rodzaj i zrób zdjęcie. Nazwa dostanie dopisek z rodzajem i numerem uszkodzenia:<br><span class="mono">ATM-0001_03_USZ2-1.jpg</span>'},
+  {t: 'Zapisz kopię', art: '<path d="M8 40v12a4 4 0 0 0 4 4h40a4 4 0 0 0 4-4V40"/><path d="M32 8v32M20 28l12 12 12-12"/>',
+   x: 'Zdjęcia są tylko na tym telefonie. Po pracy dotknij „Eksport ZIP” i zapisz paczkę na komputerze, pendrive lub dysku. W środku czekają foldery z numerami i tabela manifest.csv.'},
+  {t: 'Pracuj bez zasięgu', art: '<rect x="18" y="6" width="28" height="52" rx="6"/><path d="M28 50h8M26 24a8 8 0 0 1 12 0M22 18a14 14 0 0 1 20 0M12 56 52 8"/>',
+   x: 'Po zainstalowaniu na ekranie głównym aplikacja działa bez internetu. Otwórz ją raz z zasięgiem, a potem jedź w teren. Pomoc znajdziesz pod przyciskiem ze znakiem zapytania.'}
+];
+let tStep = 0;
+function renderTutor() {
+  const st = TUTOR_STEPS[tStep], last = tStep === TUTOR_STEPS.length - 1;
+  $('#tArt').innerHTML = `<svg viewBox="0 0 64 64">${st.art}</svg>`;
+  $('#tCount').textContent = `Krok ${tStep + 1} z ${TUTOR_STEPS.length}`;
+  $('#tTitle').textContent = st.t;
+  $('#tText').innerHTML = st.x;
+  $('#tDots').innerHTML = TUTOR_STEPS.map((_, i) => `<i class="${i === tStep ? 'on' : ''}"></i>`).join('');
+  $('#tPrev').classList.toggle('hidden', tStep === 0);
+  $('#tSkip').classList.toggle('hidden', last);
+  $('#tNext').textContent = last ? 'Zaczynamy' : 'Dalej';
+}
+function openTutorial() {
+  if ($('#helpDlg').open) $('#helpDlg').close();
+  tStep = 0; renderTutor();
+  if (!$('#tutorDlg').open) $('#tutorDlg').showModal();
+}
+function endTutorial() {
+  try { localStorage.setItem(TUTOR_KEY, '1'); } catch (e) {}
+  $('#tutorDlg').close();
+}
+$('#tNext').addEventListener('click', () => { if (tStep < TUTOR_STEPS.length - 1) { tStep++; renderTutor(); } else endTutorial(); });
+$('#tPrev').addEventListener('click', () => { if (tStep > 0) { tStep--; renderTutor(); } });
+$('#tSkip').addEventListener('click', endTutorial);
+$('#tutorDlg').addEventListener('cancel', () => { try { localStorage.setItem(TUTOR_KEY, '1'); } catch (e) {} });
+$('#helpBtn').addEventListener('click', () => $('#helpDlg').showModal());
+$('#helpTutor').addEventListener('click', openTutorial);
+$('#backupWhy').addEventListener('click', () => { $('#faqBackup').open = true; $('#helpDlg').showModal(); $('#faqBackup').scrollIntoView({block: 'center'}); });
+function tutorialSeen() { try { return localStorage.getItem(TUTOR_KEY) === '1'; } catch (e) { return true; } }
+
+
+async function getTemplate() {
+  busy(true, 'Przygotowuję wzór…');
+  try {
+    await loadLib('lib/xlsx.full.min.js');
+    const wb = XLSX.utils.book_new();
+    const list = XLSX.utils.aoa_to_sheet([
+      ['Numer ATM', 'Adres', 'Miasto', 'Uwagi'],
+      ['ATM-0001', 'ul. Marszałkowska 10', 'Warszawa', ''],
+      ['ATM-0002', 'ul. Piotrkowska 45', 'Łódź', 'wejście od podwórza'],
+      ['ATM-0003', 'al. Grunwaldzka 12', 'Gdańsk', '']
+    ]);
+    list['!cols'] = [{wch: 14}, {wch: 28}, {wch: 16}, {wch: 28}];
+    XLSX.utils.book_append_sheet(wb, list, 'Bankomaty');
+    const how = XLSX.utils.aoa_to_sheet([
+      ['Jak wypełnić listę'],
+      [''],
+      ['1. Wpisz bankomaty w arkuszu „Bankomaty”, po jednym w wierszu.'],
+      ['2. Kolumna „Numer ATM” jest obowiązkowa. Ten numer trafi do nazw zdjęć.'],
+      ['3. Kolumny „Adres”, „Miasto” i „Uwagi” są opcjonalne. Możesz je usunąć albo dodać własne.'],
+      ['4. Pierwszy wiersz musi zawierać nagłówki kolumn.'],
+      ['5. Każdy numer wpisz tylko raz. Powtórzone i puste numery aplikacja pomija.'],
+      ['6. Wiersze z przykładami usuń przed importem.'],
+      ['7. Zapisz plik jako .xlsx i wybierz go przyciskiem „Importuj Excel”.']
+    ]);
+    how['!cols'] = [{wch: 90}];
+    XLSX.utils.book_append_sheet(wb, how, 'Jak wypełnić');
+    const type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const blob = new Blob([XLSX.write(wb, {type: 'array', bookType: 'xlsx'})], {type});
+    const file = new File([blob], 'wzor-lista-bankomatow.xlsx', {type});
+    busy(false);
+    if (IOS && navigator.canShare && navigator.canShare({files: [file]})) {
+      try { await navigator.share({files: [file]}); } catch (e) { if (e.name !== 'AbortError') throw e; }
+    } else {
+      download(blob, file.name);
+      toast('Wzór zapisany w folderze Pobrane');
+    }
+  } catch (err) { busy(false); toast('Nie udało się przygotować wzoru: ' + err.message, true); }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-tpl]')) getTemplate(); });
+(async () => {
+  try { db = await openDB(); }
+  catch (e) { document.querySelector('main').innerHTML = '<p class="nothing">Ta przeglądarka nie pozwala zapisywać danych (IndexedDB). Otwórz aplikację w Chrome, poza trybem incognito.</p>'; return; }
+  fillDmgSelect();
+  items = await allItems();
+  await route();
+  if (!tutorialSeen()) openTutorial();
+  initPwa();
+  if (STANDALONE) askPersist();
+})();
+
+let userUpdate = false;
+function initPwa() {
+  const net = () => $('#net').classList.toggle('hidden', navigator.onLine);
+  addEventListener('online', net); addEventListener('offline', net); net();
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const offer = w => { if (w && navigator.serviceWorker.controller) { $('#updateBar').classList.remove('hidden'); $('#updateBtn').onclick = () => { userUpdate = true; w.postMessage('skip'); }; } };
+      offer(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        w.addEventListener('statechange', () => { if (w.state === 'installed') offer(w); });
+      });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && navigator.onLine) reg.update().catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (userUpdate) { userUpdate = false; location.reload(); } });
+  }
+
+  if (STANDALONE) return;
+  let hidden = false;
+  try { hidden = localStorage.getItem('atmInstallHidden') === '1'; } catch (e) {}
+  const bar = $('#installBar');
+  $('#installClose').onclick = () => { bar.classList.add('hidden'); try { localStorage.setItem('atmInstallHidden', '1'); } catch (e) {} };
+  if (IOS) {
+    if (hidden) return;
+    $('#installTxt').innerHTML = '<b>Dodaj do ekranu początkowego:</b> w Safari dotknij „Udostępnij”, potem „Do ekranu początkowego”. Pracuj później tylko z tej ikony, bo Safari trzyma zdjęcia osobno.';
+    bar.classList.remove('hidden');
+  }
+  addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    if (hidden) return;
+    $('#installTxt').innerHTML = '<b>Zainstaluj Foto ATM</b> na ekranie głównym – aplikacja będzie działać bez internetu.';
+    $('#installBtn').classList.remove('hidden');
+    $('#installBtn').onclick = async () => { e.prompt(); await e.userChoice.catch(() => {}); bar.classList.add('hidden'); };
+    bar.classList.remove('hidden');
+  });
+  addEventListener('appinstalled', () => bar.classList.add('hidden'));
+}
+async function offlineStatus() {
+  try {
+    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) return 'Tryb offline: jeszcze nieaktywny (otwórz aplikację ponownie z internetem).';
+    const keys = await caches.keys(), name = keys.find(k => k.startsWith('atm-foto-'));
+    const n = name ? (await (await caches.open(name)).keys()).length : 0;
+    return n >= 7 ? `Tryb offline: gotowy (${name}).` : 'Tryb offline: pobieranie plików nie zakończyło się – otwórz aplikację z internetem.';
+  } catch (e) { return ''; }
+}
+</script>
+</body>
+</html>
