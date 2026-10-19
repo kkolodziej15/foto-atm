@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>Foto ATM</title>
+<style>
+:root{--bg:#f4f6f7;--card:#fff;--ink:#14201f;--mute:#5d6b6a;--line:#dbe2e2;--acc:#0f766e;--acc-ink:#fff;--warn:#b45309;--bad:#b91c1c;--ok:#15803d}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1514;--card:#17201f;--ink:#e6efee;--mute:#93a3a1;--line:#2a3837;--acc:#2dd4bf;--acc-ink:#04201c;--warn:#fbbf24;--bad:#f87171;--ok:#4ade80}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Roboto,sans-serif}
+body{padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:center}
+header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;min-height:44px}
+button.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+button.dng{color:var(--bad);border-color:var(--bad)}
+button.sm{padding:6px 10px;min-height:34px;font-size:14px}
+button:disabled{opacity:.5}
+main{max-width:900px;margin:0 auto;padding:12px}
+input[type=search],input[type=text],input[type=number],select,textarea{font:inherit;width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.chip{white-space:nowrap;padding:6px 12px;min-height:34px;border-radius:999px;font-size:14px}
+.chip.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer}
+.item .id{font-weight:700;font-size:17px}
+.item .sub{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .mid{flex:1;min-width:0}
+.badge{font-size:13px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.badge.has{color:var(--ok);border-color:var(--ok)}
+.badge.dmg{color:var(--bad);border-color:var(--bad)}
+.empty{text-align:center;color:var(--mute);padding:48px 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px}
+.th{position:relative;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer}
+.th img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.th .nm{font-size:11px;padding:4px 6px;word-break:break-all;color:var(--mute)}
+.th.d{border-color:var(--bad)}
+.th.d .nm{color:var(--bad)}
+.bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px}
+.bar button{flex:1;min-height:52px;font-size:17px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.modal>div{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px}
+@media(min-width:640px){.modal{align-items:center}.modal>div{border-radius:16px}}
+.modal h2{margin:0 0 10px;font-size:18px}
+.modal img.full{width:100%;max-height:60vh;object-fit:contain;background:#000;border-radius:8px}
+label.f{display:block;margin:10px 0 4px;color:var(--mute);font-size:14px}
+.opts button{display:block;width:100%;text-align:left;margin-bottom:6px}
+table.pv{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+table.pv td,table.pv th{border:1px solid var(--line);padding:4px 6px;text-align:left;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:30;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.show{opacity:.95}
+.mute{color:var(--mute);font-size:14px}
+.prog{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:8px}
+.prog>i{display:block;height:100%;width:0;background:var(--acc)}
+</style>
+</head>
+<body>
+<header id="hdr"></header>
+<main id="main"></main>
+<div id="bar"></div>
+<div id="toast"></div>
+<input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="fGal" accept="image/*" multiple hidden>
+<input type="file" id="fXls" accept=".xlsx,.xls,.csv,.ods" hidden>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DEF={maxDim:2048,quality:0.85,structure:'folders',partMB:400,dmgTypes:['Wyświetlacz','Klawiatura','Czytnik kart','Obudowa','Inne']};
+let CFG={...DEF};
+try{Object.assign(CFG,JSON.parse(localStorage.getItem('atmcfg')||'{}'))}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem('atmcfg',JSON.stringify(CFG))}catch(e){}};
+
+/* ---------- IndexedDB ---------- */
+let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('atm-foto',1);
+ r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('items',{keyPath:'id'});const p=d.createObjectStore('photos',{keyPath:'pid',autoIncrement:true});p.createIndex('byItem','itemId');};
+ r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+const rq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+const done=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);});
+
+const S={items:[],cur:null,filter:'all',q:'',limit:200};
+async function loadItems(){const t=db.transaction('items');S.items=await rq(t.objectStore('items').getAll());S.items.sort((a,b)=>a.order-b.order);}
+async function getPhotos(id){const t=db.transaction('photos');const l=await rq(t.objectStore('photos').index('byItem').getAll(id));l.sort((a,b)=>a.ts-b.ts||a.pid-b.pid);return l;}
+async function addPhoto(itemId,blob,dmg){
+ const t=db.transaction(['items','photos'],'readwrite');
+ const it=await rq(t.objectStore('items').get(itemId));
+ await rq(t.objectStore('photos').add({itemId,ts:Date.now(),dmg:dmg||0,blob}));
+ it.n=(it.n||0)+1;if(dmg)it.d=(it.d||0)+1;t.objectStore('items').put(it);
+ await done(t);const m=S.items.find(x=>x.id===itemId);m.n=it.n;m.d=it.d;}
+async function delPhoto(p){
+ const t=db.transaction(['items','photos'],'readwrite');
+ const it=await rq(t.objectStore('items').get(p.itemId));
+ t.objectStore('photos').delete(p.pid);it.n=Math.max(0,(it.n||0)-1);if(p.dmg)it.d=Math.max(0,(it.d||0)-1);t.objectStore('items').put(it);
+ await done(t);const m=S.items.find(x=>x.id===p.itemId);m.n=it.n;m.d=it.d;}
+async function setDmg(p,dmg){
+ const t=db.transaction(['items','photos'],'readwrite');
+ const it=await rq(t.objectStore('items').get(p.itemId));
+ const old=p.dmg;p.dmg=dmg;t.objectStore('photos').put(p);
+ it.d=Math.max(0,(it.d||0)+(dmg?1:0)-(old?1:0));t.objectStore('items').put(it);
+ await done(t);S.items.find(x=>x.id===p.itemId).d=it.d;}
+
+/* ---------- naming ---------- */
+const safe=s=>String(s).replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').trim();
+function names(item,photos){
+ const w=Math.max(2,String(photos.length).length),cnt={};
+ return photos.map((p,i)=>{
+  let n=safe(item.id)+'_'+String(i+1).padStart(w,'0');
+  if(p.dmg){cnt[p.dmg]=(cnt[p.dmg]||0)+1;n+='_USZ'+p.dmg+'-'+cnt[p.dmg];}
+  return n+'.jpg';});
+}
+
+/* ---------- UI helpers ---------- */
+let tt;function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2200);}
+function modal(html){const m=document.createElement('div');m.className='modal';m.innerHTML='<div>'+html+'</div>';
+ m.addEventListener('click',e=>{if(e.target===m)m.remove();});document.body.appendChild(m);return m;}
+let urls=[];const rev=()=>{urls.forEach(URL.revokeObjectURL);urls=[];};
+const mk=b=>{const u=URL.createObjectURL(b);urls.push(u);return u;};
+
+/* ---------- list view ---------- */
+function filtered(){
+ const q=S.q.toLowerCase();
+ return S.items.filter(i=>{
+  if(S.filter==='none'&&i.n)return false;
+  if(S.filter==='has'&&!i.n)return false;
+  if(S.filter==='dmg'&&!i.d)return false;
+  if(q&&!(i.id.toLowerCase().includes(q)||(i.info||'').toLowerCase().includes(q)))return false;
+  return true;});
+}
+function viewList(){
+ S.cur=null;rev();
+ const tot=S.items.length,withPh=S.items.filter(i=>i.n).length,ph=S.items.reduce((a,i)=>a+(i.n||0),0);
+ $('#hdr').innerHTML='<h1>Foto ATM</h1><button id="bImp">Import</button><button id="bExp" class="pri">Eksport</button><button id="bSet" aria-label="Ustawienia">⚙</button>';
+ $('#bar').innerHTML='';
+ if(!tot){$('#main').innerHTML='<div class="empty"><p><b>Brak pozycji.</b></p><p>Zaimportuj plik Excel (.xlsx) z numerami głównymi bankomatów.</p><button class="pri" id="bImp2">Importuj plik Excel</button></div>';
+  $('#bImp2').onclick=()=>$('#fXls').click();}
+ else{
+  const f=filtered();
+  const chips=[['all','Wszystkie'],['none','Bez zdjęć'],['has','Ze zdjęciami'],['dmg','Uszkodzenia']].map(([k,l])=>`<button class="chip ${S.filter===k?'on':''}" data-f="${k}">${l}</button>`).join('');
+  $('#main').innerHTML=`<input type="search" id="q" placeholder="Szukaj numeru…" value="${esc(S.q)}">
+  <div class="chips">${chips}</div>
+  <div class="mute" style="margin-bottom:8px">Pozycji: ${tot} · z ${withPh} zdjęciami · zdjęć razem: ${ph}</div>
+  <div id="lst"></div>`;
+  const lst=$('#lst');
+  const show=f.slice(0,S.limit);
+  lst.innerHTML=show.map(i=>`<div class="item" data-id="${esc(i.id)}"><div class="mid"><div class="id">${esc(i.id)}</div>${i.info?`<div class="sub">${esc(i.info)}</div>`:''}</div>${i.d?`<span class="badge dmg">⚠ ${i.d}</span>`:''}<span class="badge ${i.n?'has':''}">${i.n||0} zdj.</span></div>`).join('')
+   +(f.length>show.length?`<button id="more" style="width:100%">Pokaż więcej (${f.length-show.length})</button>`:'')
+   +(!f.length?'<div class="empty">Brak wyników.</div>':'');
+  lst.onclick=e=>{const el=e.target.closest('.item');if(el)viewItem(el.dataset.id);};
+  const mo=$('#more');if(mo)mo.onclick=()=>{S.limit+=200;viewList();};
+  $('#q').oninput=e=>{S.q=e.target.value;S.limit=200;const p=e.target.selectionStart;viewList();const q=$('#q');q.focus();q.setSelectionRange(p,p);};
+  document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{S.filter=c.dataset.f;S.limit=200;viewList();});
+ }
+ $('#bImp').onclick=()=>$('#fXls').click();
+ $('#bExp').onclick=openExport;
+ $('#bSet').onclick=openSettings;
+}
+
+/* ---------- item view ---------- */
+async function viewItem(id){
+ rev();S.cur=id;
+ const it=S.items.find(x=>x.id===id);if(!it)return viewList();
+ const photos=await getPhotos(id),nm=names(it,photos);
+ const idx=S.items.indexOf(it);
+ $('#hdr').innerHTML=`<button id="bBack">←</button><h1>${esc(it.id)}</h1><button id="bPrev" aria-label="Poprzedni">‹</button><button id="bNext" aria-label="Następny">›</button>`;
+ $('#main').innerHTML=`${it.info?`<div class="mute">${esc(it.info)}</div>`:''}
+ <div class="mute">Zdjęć: <b>${photos.length}</b>${it.d?` · uszkodzeń: <b>${it.d}</b>`:''}</div>
+ <div class="grid">${photos.map((p,i)=>`<div class="th ${p.dmg?'d':''}" data-i="${i}"><img src="${mk(p.blob)}" loading="lazy" alt=""><div class="nm">${esc(nm[i])}${p.dmg?' · '+esc(CFG.dmgTypes[p.dmg-1]||'typ '+p.dmg):''}</div></div>`).join('')}</div>
+ ${!photos.length?'<div class="empty">Brak zdjęć. Użyj przycisku poniżej.</div>':''}
+ <div style="height:90px"></div>`;
+ $('#bar').innerHTML='<div class="bar"><button class="pri" id="bShot">📷 Zdjęcie</button><button id="bDmg">⚠ Uszkodzenie</button><button id="bGal" style="flex:.5" aria-label="Z galerii">🖼</button></div>';
+ $('#bBack').onclick=viewList;
+ $('#bPrev').onclick=()=>idx>0&&viewItem(S.items[idx-1].id);
+ $('#bNext').onclick=()=>idx<S.items.length-1&&viewItem(S.items[idx+1].id);
+ $('#bShot').onclick=()=>{pending={dmg:0};$('#fCam').click();};
+ $('#bGal').onclick=()=>{pending={dmg:0};$('#fGal').click();};
+ $('#bDmg').onclick=()=>{
+  const m=modal('<h2>Rodzaj uszkodzenia</h2><div class="opts">'+CFG.dmgTypes.map((t,i)=>`<button data-t="${i+1}">${i+1}. ${esc(t)}</button>`).join('')+'</div>');
+  m.onclick=e=>{const b=e.target.closest('[data-t]');if(b){pending={dmg:+b.dataset.t};m.remove();$('#fCam').click();}else if(e.target===m)m.remove();};};
+ $('.grid').onclick=e=>{const t=e.target.closest('.th');if(t)openPhoto(it,photos,nm,+t.dataset.i);};
+}
+let pending={dmg:0};
+
+function openPhoto(it,photos,nm,i){
+ const p=photos[i];
+ const m=modal(`<h2>${esc(nm[i])}</h2><img class="full" src="${mk(p.blob)}" alt=""><p class="mute">${(p.blob.size/1024).toFixed(0)} KB · ${new Date(p.ts).toLocaleString('pl-PL')}</p>
+ <div class="opts"><button id="pT">${p.dmg?'Zmień typ uszkodzenia / usuń oznaczenie':'Oznacz jako uszkodzenie'}</button><button class="dng" id="pD">Usuń zdjęcie</button><button id="pC">Zamknij</button></div>`);
+ m.querySelector('#pC').onclick=()=>m.remove();
+ m.querySelector('#pD').onclick=async()=>{if(!confirm('Usunąć zdjęcie? Kolejne zostaną przenumerowane.'))return;await delPhoto(p);m.remove();viewItem(it.id);};
+ m.querySelector('#pT').onclick=()=>{
+  m.remove();
+  const m2=modal('<h2>Typ uszkodzenia</h2><div class="opts">'+CFG.dmgTypes.map((t,k)=>`<button data-t="${k+1}">${k+1}. ${esc(t)}</button>`).join('')+'<button data-t="0">Brak uszkodzenia (zwykłe zdjęcie)</button></div>');
+  m2.onclick=async e=>{const b=e.target.closest('[data-t]');if(b){await setDmg(p,+b.dataset.t);m2.remove();viewItem(it.id);}else if(e.target===m2)m2.remove();};};
+}
+
+/* ---------- photo capture ---------- */
+async function processImage(file){
+ const md=+CFG.maxDim;
+ if(!md)return file;
+ try{
+  const bmp=await createImageBitmap(file,{imageOrientation:'from-image'});
+  const sc=Math.min(1,md/Math.max(bmp.width,bmp.height));
+  if(sc>=1&&file.type==='image/jpeg'){bmp.close&&bmp.close();return file;}
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);bmp.close&&bmp.close();
+  return await new Promise(r=>c.toBlob(r,'image/jpeg',+CFG.quality||.85))||file;
+ }catch(e){return file;}
+}
+async function handleFiles(files){
+ if(!S.cur||!files.length)return;
+ const id=S.cur,dmg=pending.dmg;let last='';
+ for(const f of files){
+  const b=await processImage(f);await addPhoto(id,b,dmg);
+ }
+ const it=S.items.find(x=>x.id===id),ph=await getPhotos(id);last=names(it,ph)[ph.length-1];
+ toast('Zapisano: '+last);await viewItem(id);
+}
+$('#fCam').onchange=async e=>{const f=[...e.target.files];e.target.value='';await handleFiles(f);};
+$('#fGal').onchange=async e=>{const f=[...e.target.files];e.target.value='';await handleFiles(f);};
+
+/* ---------- import ---------- */
+$('#fXls').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{
+  const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+  openImport(wb,f.name);
+ }catch(err){alert('Nie udało się odczytać pliku: '+err.message);}
+};
+function openImport(wb,fname){
+ let sheet=wb.SheetNames[0],hdr=true,idCol=0,infoCols=[];
+ const get=()=>XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:false,defval:'',blankrows:false});
+ const m=modal('<div id="impBody"></div>');
+ const body=m.querySelector('#impBody');
+ function draw(){
+  const rows=get();const head=hdr?rows[0]||[]:(rows[0]||[]).map((_,i)=>'Kol. '+(i+1));
+  const data=hdr?rows.slice(1):rows;
+  const ncol=Math.max(head.length,...data.slice(0,50).map(r=>r.length),1);
+  const colName=i=>(head[i]!==undefined&&String(head[i]).trim())?String(head[i]).trim():'Kolumna '+(i+1);
+  if(idCol>=ncol)idCol=0;
+  body.innerHTML=`<h2>Import: ${esc(fname)}</h2>
+  <label class="f">Arkusz</label><select id="iSh">${wb.SheetNames.map(s=>`<option ${s===sheet?'selected':''}>${esc(s)}</option>`).join('')}</select>
+  <label class="f"><input type="checkbox" id="iHd" ${hdr?'checked':''}> Pierwszy wiersz to nagłówki</label>
+  <label class="f">Kolumna z numerem głównym</label><select id="iId">${Array.from({length:ncol},(_,i)=>`<option value="${i}" ${i===idCol?'selected':''}>${esc(colName(i))}</option>`).join('')}</select>
+  <label class="f">Dodatkowe kolumny do wyświetlania (np. adres, lokalizacja)</label>
+  <div>${Array.from({length:ncol},(_,i)=>i===idCol?'':`<label style="display:block"><input type="checkbox" class="iInf" value="${i}" ${infoCols.includes(i)?'checked':''}> ${esc(colName(i))}</label>`).join('')}</div>
+  <label class="f">Podgląd (${data.length} wierszy)</label>
+  <div style="overflow:auto"><table class="pv">${data.slice(0,4).map(r=>'<tr>'+Array.from({length:Math.min(ncol,6)},(_,i)=>`<td>${esc(r[i])}</td>`).join('')+'</tr>').join('')}</table></div>
+  <p class="mute">Istniejące pozycje (ten sam numer) zachowają swoje zdjęcia. Nowe zostaną dodane na koniec.</p>
+  <div class="row"><button class="pri" id="iOk" style="flex:1">Importuj</button><button id="iNo">Anuluj</button></div>`;
+  body.querySelector('#iSh').onchange=e=>{sheet=e.target.value;idCol=0;infoCols=[];draw();};
+  body.querySelector('#iHd').onchange=e=>{hdr=e.target.checked;draw();};
+  body.querySelector('#iId').onchange=e=>{idCol=+e.target.value;infoCols=infoCols.filter(c=>c!==idCol);draw();};
+  body.querySelectorAll('.iInf').forEach(c=>c.onchange=()=>{infoCols=[...body.querySelectorAll('.iInf:checked')].map(x=>+x.value);});
+  body.querySelector('#iNo').onclick=()=>m.remove();
+  body.querySelector('#iOk').onclick=async()=>{
+   infoCols=[...body.querySelectorAll('.iInf:checked')].map(x=>+x.value);
+   const r=await doImport(data,idCol,infoCols);m.remove();
+   alert(`Dodano: ${r.added}\nZaktualizowano: ${r.upd}\nPominięto puste: ${r.empty}\nPominięto duplikaty w pliku: ${r.dup}`);
+   viewList();};
+ }
+ draw();
+}
+async function doImport(rows,idCol,infoCols){
+ const t=db.transaction('items','readwrite'),st=t.objectStore('items');
+ const ex=new Map(S.items.map(i=>[i.id,i]));let order=S.items.reduce((a,i)=>Math.max(a,i.order),-1)+1;
+ const seen=new Set();const r={added:0,upd:0,empty:0,dup:0};
+ for(const row of rows){
+  const id=String(row[idCol]??'').trim();
+  if(!id){r.empty++;continue;}
+  if(seen.has(id)){r.dup++;continue;}seen.add(id);
+  const info=infoCols.map(c=>String(row[c]??'').trim()).filter(Boolean).join(' · ');
+  const old=ex.get(id);
+  if(old){old.info=info||old.info;st.put(old);r.upd++;}
+  else{st.put({id,info,order:order++,n:0,d:0});r.added++;}
+ }
+ await done(t);await loadItems();
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+ return r;
+}
+
+/* ---------- export ---------- */
+async function openExport(){
+ const withPh=S.items.filter(i=>i.n);
+ const total=withPh.reduce((a,i)=>a+i.n,0);
+ if(!total){alert('Brak zdjęć do wyeksportowania.');return;}
+ const m=modal(`<h2>Eksport do ZIP</h2>
+ <p>Pozycji ze zdjęciami: <b>${withPh.length}</b> · zdjęć: <b>${total}</b></p>
+ <label class="f">Struktura w archiwum</label>
+ <select id="eS"><option value="folders" ${CFG.structure==='folders'?'selected':''}>Folder dla każdego numeru głównego</option><option value="flat" ${CFG.structure==='flat'?'selected':''}>Wszystkie pliki w jednym folderze</option></select>
+ <label class="f">Maks. rozmiar jednej paczki (MB), większy zbiór zostanie podzielony na części</label>
+ <input type="number" id="eM" min="50" value="${CFG.partMB}">
+ <p class="mute">Każda paczka zawiera też plik manifest.csv. Pliki ZIP pojawią się w folderze Pobrane. Stamtąd skopiuj je na pendrive, dysk lub nagraj na płytę.</p>
+ <div class="prog" hidden><i></i></div><div class="mute" id="eSt"></div>
+ <div class="row" style="margin-top:12px"><button class="pri" id="eGo" style="flex:1">Eksportuj</button><button id="eNo">Zamknij</button></div>`);
+ m.querySelector('#eNo').onclick=()=>m.remove();
+ m.querySelector('#eGo').onclick=async()=>{
+  CFG.structure=m.querySelector('#eS').value;CFG.partMB=Math.max(50,+m.querySelector('#eM').value||400);saveCfg();
+  m.querySelector('#eGo').disabled=true;m.querySelector('.prog').hidden=false;
+  try{await runExport(withPh,total,m);}catch(e){alert('Błąd eksportu: '+e.message);}
+  m.querySelector('#eGo').disabled=false;
+ };
+}
+const csvq=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+const stamp=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;};
+async function runExport(items,total,m){
+ const st=m.querySelector('#eSt'),bar=m.querySelector('.prog>i');
+ const limit=CFG.partMB*1024*1024,ts=stamp();
+ let zip=new JSZip(),size=0,part=1,man=[],cnt=0,files=[];
+ const flush=async()=>{
+  if(!cnt)return;
+  zip.file('manifest.csv','﻿'+['numer_glowny;info;plik;rodzaj_uszkodzenia;data;rozmiar_kb',...man].join('\r\n'));
+  st.textContent='Pakowanie części '+part+'…';
+  const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
+  const name=`foto-atm_${ts}_czesc${String(part).padStart(2,'0')}.zip`;
+  download(blob,name);files.push(name);
+  part++;zip=new JSZip();size=0;man=[];cnt=0;await new Promise(r=>setTimeout(r,700));
+ };
+ let doneN=0;
+ for(const it of items){
+  const ph=await getPhotos(it.id),nm=names(it,ph);
+  for(let i=0;i<ph.length;i++){
+   if(size+ph[i].blob.size>limit&&cnt)await flush();
+   const path=(CFG.structure==='folders'?safe(it.id)+'/':'')+nm[i];
+   zip.file(path,ph[i].blob,{binary:true,date:new Date(ph[i].ts)});
+   man.push([csvq(it.id),csvq(it.info),csvq(path),csvq(ph[i].dmg?(CFG.dmgTypes[ph[i].dmg-1]||'typ '+ph[i].dmg):''),csvq(new Date(ph[i].ts).toISOString()),Math.round(ph[i].blob.size/1024)].join(';'));
+   size+=ph[i].blob.size;cnt++;doneN++;
+   if(doneN%10===0){bar.style.width=(doneN/total*100)+'%';st.textContent=`Przygotowanie ${doneN}/${total}…`;await new Promise(r=>setTimeout(r,0));}
+  }
+ }
+ await flush();bar.style.width='100%';
+ st.innerHTML='Gotowe. Pobrano pliki:<br>'+files.map(esc).join('<br>');
+}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},60000);}
+
+/* ---------- settings ---------- */
+async function openSettings(){
+ let usage='';try{const e=await navigator.storage.estimate();const per=navigator.storage.persisted?await navigator.storage.persisted():false;usage=`Zajęte: ${(e.usage/1048576).toFixed(0)} MB z ~${(e.quota/1048576).toFixed(0)} MB · trwałe przechowywanie: ${per?'tak':'nie'}`;}catch(e){}
+ const m=modal(`<h2>Ustawienia</h2>
+ <label class="f">Maks. dłuższy bok zdjęcia (px). 0 = oryginał bez zmian</label><input type="number" id="sD" value="${CFG.maxDim}" min="0">
+ <label class="f">Jakość JPEG (0.5–1)</label><input type="number" id="sQ" step="0.05" min="0.5" max="1" value="${CFG.quality}">
+ <label class="f">Rodzaje uszkodzeń (jeden w wierszu; numer = kolejność, trafia do nazwy pliku jako USZ1, USZ2…)</label><textarea id="sT" rows="6">${esc(CFG.dmgTypes.join('\n'))}</textarea>
+ <p class="mute">Zmiana kolejności lub usunięcie typu zmienia znaczenie numerów w już zrobionych zdjęciach.</p>
+ <p class="mute">${esc(usage)}</p>
+ <div class="row"><button class="pri" id="sOk" style="flex:1">Zapisz</button><button id="sNo">Anuluj</button></div>
+ <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+ <button class="dng" id="sClr">Usuń wszystkie dane z tego urządzenia</button>`);
+ m.querySelector('#sNo').onclick=()=>m.remove();
+ m.querySelector('#sOk').onclick=()=>{CFG.maxDim=Math.max(0,+m.querySelector('#sD').value||0);CFG.quality=Math.min(1,Math.max(.5,+m.querySelector('#sQ').value||.85));
+  const t=m.querySelector('#sT').value.split('\n').map(s=>s.trim()).filter(Boolean);CFG.dmgTypes=t.length?t:DEF.dmgTypes;saveCfg();m.remove();toast('Zapisano ustawienia');};
+ m.querySelector('#sClr').onclick=async()=>{
+  if(!confirm('Usunąć WSZYSTKIE pozycje i zdjęcia z tego urządzenia? Najpierw wykonaj eksport.'))return;
+  if(prompt('Wpisz USUŃ, aby potwierdzić')!=='USUŃ')return;
+  const t=db.transaction(['items','photos'],'readwrite');t.objectStore('items').clear();t.objectStore('photos').clear();await done(t);
+  await loadItems();m.remove();viewList();};
+}
+
+/* ---------- init ---------- */
+(async()=>{
+ db=await openDB();await loadItems();viewList();
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
